@@ -1,0 +1,2461 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FOUND_PC</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FOUND_PC">
+<meta name="theme-color" content="#008080">
+<link rel="manifest" href="data:application/json,{&quot;name&quot;:&quot;FOUND_PC&quot;,&quot;short_name&quot;:&quot;FOUND_PC&quot;,&quot;display&quot;:&quot;fullscreen&quot;,&quot;background_color&quot;:&quot;#008080&quot;,&quot;theme_color&quot;:&quot;#008080&quot;,&quot;start_url&quot;:&quot;.&quot;,&quot;icons&quot;:[{&quot;src&quot;:&quot;data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23008080'/><text y='.9em' font-size='80'>🖥️</text></svg>&quot;,&quot;sizes&quot;:&quot;any&quot;,&quot;type&quot;:&quot;image/svg+xml&quot;}]}">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+
+  body {
+    background: #008080;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    cursor: default;
+  }
+
+  /* DESKTOP */
+  #desktop {
+    width: 100%;
+    height: calc(100vh - 30px);
+    position: relative;
+    background: #008080;
+  }
+
+  .desktop-icon {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    padding: 4px;
+    width: 72px;
+    text-align: center;
+  }
+  .desktop-icon:hover { background: rgba(0,0,128,0.3); }
+  .desktop-icon.selected { background: rgba(0,0,128,0.5); }
+  .desktop-icon .icon-img {
+    font-size: 32px;
+    line-height: 1;
+    image-rendering: pixelated;
+  }
+  .desktop-icon .icon-label {
+    color: white;
+    font-size: 11px;
+    text-shadow: 1px 1px 1px black;
+    word-break: break-word;
+    line-height: 1.2;
+  }
+
+  /* TASKBAR */
+  #taskbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 30px;
+    background: #c0c0c0;
+    border-top: 2px solid #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 4px;
+    z-index: 1000;
+  }
+
+  #start-btn {
+    background: #c0c0c0;
+    border: 2px solid;
+    border-color: #ffffff #808080 #808080 #ffffff;
+    padding: 2px 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  #start-btn:active {
+    border-color: #808080 #ffffff #ffffff #808080;
+  }
+
+  .taskbar-item {
+    background: #c0c0c0;
+    border: 2px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+    padding: 2px 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    min-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .taskbar-item.active {
+    border-color: #808080 #ffffff #ffffff #808080;
+    background: #b0b0b0;
+  }
+
+  #clock {
+    margin-left: auto;
+    border: 2px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+    padding: 2px 6px;
+    font-size: 11px;
+  }
+
+  /* WINDOWS */
+  .win {
+    position: absolute;
+    background: #c0c0c0;
+    border: 2px solid;
+    border-color: #ffffff #808080 #808080 #ffffff;
+    box-shadow: 2px 2px 0 #000;
+    min-width: 300px;
+    min-height: 200px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .win-titlebar {
+    background: linear-gradient(90deg, #000080, #1084d0);
+    color: white;
+    padding: 3px 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: move;
+    font-size: 11px;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+  .win-titlebar .win-icon { font-size: 14px; }
+  .win-titlebar .win-title { flex: 1; }
+
+  .win-controls {
+    display: flex;
+    gap: 2px;
+  }
+  .win-btn {
+    width: 16px;
+    height: 14px;
+    background: #c0c0c0;
+    border: 1px solid;
+    border-color: #ffffff #808080 #808080 #ffffff;
+    font-size: 9px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Share Tech Mono';
+    color: black;
+  }
+  .win-btn:active { border-color: #808080 #ffffff #ffffff #808080; }
+
+  .win-menubar {
+    background: #c0c0c0;
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid #808080;
+    flex-shrink: 0;
+  }
+  .win-menu-item {
+    padding: 2px 8px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .win-menu-item:hover { background: #000080; color: white; }
+
+  .win-content {
+    flex: 1;
+    overflow: auto;
+    padding: 4px;
+    background: white;
+    border: 2px inset #808080;
+    margin: 2px;
+  }
+
+  .win-statusbar {
+    border-top: 1px solid #808080;
+    padding: 2px 4px;
+    font-size: 10px;
+    color: #444;
+    flex-shrink: 0;
+  }
+
+  /* FILE EXPLORER */
+  .file-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 4px;
+    align-content: flex-start;
+  }
+  .file-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 64px;
+    cursor: pointer;
+    padding: 4px;
+    text-align: center;
+  }
+  .file-item:hover { background: #000080; color: white; }
+  .file-item .fi-icon { font-size: 28px; }
+  .file-item .fi-name { font-size: 10px; word-break: break-word; line-height: 1.2; margin-top: 2px; }
+
+  /* TEXT VIEWER */
+  .text-content {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    padding: 8px;
+    white-space: pre-wrap;
+    color: #000;
+  }
+
+  /* IMAGE VIEWER */
+  .img-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    background: #808080;
+    height: 100%;
+  }
+  .img-canvas {
+    image-rendering: pixelated;
+    max-width: 100%;
+    max-height: 300px;
+    border: 2px solid #000;
+  }
+
+  /* PHOTO - pixel art rendered on canvas */
+  .photo-frame {
+    background: #000;
+    padding: 4px;
+    box-shadow: 2px 2px 0 #333;
+  }
+
+  /* PROGRESS BAR */
+  .progress-wrap {
+    background: white;
+    border: 2px inset #808080;
+    height: 16px;
+    margin: 4px 8px;
+  }
+  .progress-bar {
+    background: #000080;
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s;
+  }
+
+  /* DIALOG */
+  .dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #c0c0c0;
+    border: 2px solid;
+    border-color: #ffffff #808080 #808080 #ffffff;
+    box-shadow: 4px 4px 0 #000;
+    z-index: 9999;
+    min-width: 280px;
+    padding: 0;
+  }
+  .dialog-title {
+    background: linear-gradient(90deg, #000080, #1084d0);
+    color: white;
+    padding: 3px 6px;
+    font-size: 11px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .dialog-body {
+    padding: 12px 16px;
+    font-size: 12px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .dialog-icon { font-size: 32px; }
+  .dialog-text { flex: 1; line-height: 1.6; }
+  .dialog-btns {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 16px 12px;
+  }
+  .dialog-btn {
+    background: #c0c0c0;
+    border: 2px solid;
+    border-color: #ffffff #808080 #808080 #ffffff;
+    padding: 4px 20px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    min-width: 75px;
+  }
+  .dialog-btn:active { border-color: #808080 #ffffff #ffffff #808080; }
+  .dialog-btn:focus { outline: 1px dotted #000; outline-offset: -3px; }
+
+  /* PASSWORD INPUT */
+  .pw-input {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    border: 2px inset #808080;
+    padding: 2px 4px;
+    width: 100%;
+    margin-top: 6px;
+    background: white;
+  }
+
+  /* SCREEN GLITCH */
+  @keyframes glitch {
+    0%   { transform: translate(0); filter: none; }
+    20%  { transform: translate(-3px, 2px); filter: hue-rotate(90deg); }
+    40%  { transform: translate(3px, -2px); filter: invert(0.1); }
+    60%  { transform: translate(-2px, 1px); filter: hue-rotate(180deg); }
+    80%  { transform: translate(2px, -1px); filter: none; }
+    100% { transform: translate(0); filter: none; }
+  }
+  .glitch { animation: glitch 0.3s steps(2) 3; }
+
+  /* BOOT SCREEN */
+  #boot {
+    position: fixed;
+    inset: 0;
+    background: black;
+    color: #c0c0c0;
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    padding: 20px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+  }
+  #boot .boot-line { opacity: 0; }
+  #boot .boot-line.show { opacity: 1; }
+
+  /* FINAL SCREEN */
+  #final-screen {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: black;
+    z-index: 99998;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'VT323', monospace;
+    color: #ff0000;
+  }
+  #final-screen.show { display: flex; }
+  #final-msg {
+    font-size: 20px;
+    text-align: center;
+    max-width: 600px;
+    line-height: 1.8;
+    padding: 20px;
+  }
+  #final-msg .red { color: #ff3333; }
+  #final-msg .white { color: #ffffff; }
+  #final-msg .blink { animation: blink 1s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 16px; }
+  ::-webkit-scrollbar-track { background: #c0c0c0; }
+  ::-webkit-scrollbar-thumb {
+    background: #c0c0c0;
+    border: 2px solid;
+    border-color: #ffffff #808080 #808080 #ffffff;
+  }
+
+  /* MOBILE */
+  @media (max-width: 600px) {
+    body { font-size: 13px; }
+    .win { min-width: 92vw !important; width: 92vw !important; left: 4vw !important; }
+    .win-titlebar { padding: 5px 6px; font-size: 12px; }
+    .win-btn { width: 22px; height: 20px; font-size: 11px; }
+    .win-content { padding: 6px; }
+    .file-item { width: 72px; }
+    .file-item .fi-icon { font-size: 32px; }
+    .file-item .fi-name { font-size: 11px; }
+    .desktop-icon { width: 64px; }
+    .desktop-icon .icon-img { font-size: 28px; }
+    .desktop-icon .icon-label { font-size: 10px; }
+    #taskbar { height: 36px; }
+    #desktop { height: calc(100vh - 36px); }
+    #start-btn { padding: 4px 10px; font-size: 13px; }
+    .taskbar-item { font-size: 12px; min-width: 80px; }
+    #clock { font-size: 12px; }
+    .dialog { min-width: 85vw; }
+    .text-content { font-size: 13px; line-height: 1.7; }
+    .img-canvas { max-width: 100%; max-height: 220px; }
+  }
+
+  .separator { width: 2px; height: 20px; border-left: 1px solid #808080; border-right: 1px solid #fff; margin: 0 2px; }
+
+  /* ===== MOBILE ===== */
+  @media (max-width: 600px) {
+    body { font-size: 14px; -webkit-tap-highlight-color: transparent; }
+
+    #taskbar { height: 42px; padding: 3px 6px; }
+    #start-btn { padding: 6px 12px; font-size: 14px; min-height: 34px; }
+    #clock { font-size: 12px; }
+  }
+
+  /* NOTEPAD SPECIFIC */
+  .notepad-content {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    padding: 4px;
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+    height: 100%;
+    background: white;
+    color: #000;
+    line-height: 1.6;
+  }
+
+  /* CMD TERMINAL */
+  .cmd-window .win-titlebar {
+    background: #000000 !important;
+    color: #c0c0c0;
+  }
+  .cmd-body {
+    background: #000000;
+    color: #c0c0c0;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 6px 8px;
+    height: 100%;
+    overflow-y: auto;
+    cursor: text;
+    box-sizing: border-box;
+  }
+  .cmd-body::-webkit-scrollbar { width: 12px; }
+  .cmd-body::-webkit-scrollbar-track { background: #000; }
+  .cmd-body::-webkit-scrollbar-thumb { background: #444; }
+  .cmd-line { white-space: pre-wrap; word-break: break-all; }
+  .cmd-line.yellow { color: #ffff55; }
+  .cmd-line.green  { color: #55ff55; }
+  .cmd-line.red    { color: #ff5555; }
+  .cmd-line.cyan   { color: #55ffff; }
+  .cmd-line.white  { color: #ffffff; }
+  .cmd-line.gray   { color: #888888; }
+  .cmd-input-row {
+    display: flex;
+    align-items: center;
+    margin-top: 2px;
+  }
+  .cmd-prompt-label {
+    color: #c0c0c0;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+  }
+  .cmd-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #c0c0c0;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    flex: 1;
+    caret-color: #c0c0c0;
+    padding: 0 2px;
+  }
+  .cmd-cursor {
+    display: inline-block;
+    width: 8px;
+    height: 14px;
+    background: #c0c0c0;
+    vertical-align: middle;
+    animation: blink-cur 1s step-end infinite;
+  }
+  @keyframes blink-cur { 50% { opacity: 0; } }
+  @media (max-width: 600px) {
+    .cmd-body { font-size: 12px; }
+    .cmd-input { font-size: 12px; }
+    .cmd-prompt-label { font-size: 12px; }
+  }
+  /* INTRO CURTAIN */
+  #intro-curtain {
+    position: fixed;
+    inset: 0;
+    z-index: 99996;
+    pointer-events: none;
+  }
+  #curtain-top, #curtain-bottom {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: #000;
+    transition: transform 2.2s cubic-bezier(0.76, 0, 0.24, 1);
+  }
+  #curtain-top    { top: 0; transform: translateY(0); }
+  #curtain-bottom { bottom: 0; transform: translateY(0); }
+  #curtain-top.open    { transform: translateY(-100%); }
+  #curtain-bottom.open { transform: translateY(100%); }
+  #intro-curtain.done  { display: none; }
+  #intro-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99997;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>
+</head>
+<body>
+
+<!-- BOOT SCREEN -->
+<div id="boot">
+  <div class="boot-line">AMIBIOS (C)1996 American Megatrends Inc.</div>
+  <div class="boot-line">BIOS Date: 04/23/97  22:01:05  Ver: 1.00</div>
+  <div class="boot-line">Press DEL to enter SETUP</div>
+  <div class="boot-line">&nbsp;</div>
+  <div class="boot-line">Detecting IDE drives...</div>
+  <div class="boot-line">Primary Master:   QUANTUM FIREBALL 2.1GB</div>
+  <div class="boot-line">Primary Slave:    None</div>
+  <div class="boot-line">&nbsp;</div>
+  <div class="boot-line">Memory Test: 16384K OK</div>
+  <div class="boot-line">&nbsp;</div>
+  <div class="boot-line" style="color:#ffff00;">Loading WinOS 95...</div>
+  <div class="boot-line">&nbsp;</div>
+  <div class="boot-line" id="boot-last" style="color:#ff8800;">⚠ Última sessão encerrada de forma inesperada.</div>
+  <div class="boot-line" id="boot-last2" style="color:#c0c0c0;">Acesso de recuperação autorizado. Bem-vindo.</div>
+</div>
+
+<!-- DESKTOP -->
+<div id="desktop">
+  <!-- Icons will be injected by JS -->
+</div>
+
+<!-- TASKBAR -->
+<div id="taskbar">
+  <button id="start-btn" onclick="toggleStart()">⊞ Iniciar</button>
+  <div class="separator"></div>
+  <div id="taskbar-items" style="display:flex;gap:4px;flex:1;overflow:hidden;"></div>
+  <div id="clock">00:00</div>
+</div>
+
+<!-- START MENU -->
+<div id="start-menu" style="display:none;position:fixed;bottom:30px;left:0;background:#c0c0c0;border:2px solid;border-color:#fff #808080 #808080 #fff;box-shadow:2px 2px 0 #000;z-index:2000;width:180px;">
+  <div style="background:linear-gradient(180deg,#808080,#404040);color:white;font-family:'VT323';font-size:20px;padding:4px 8px;writing-mode:vertical-rl;transform:rotate(180deg);position:absolute;left:0;top:0;height:100%;display:flex;align-items:center;">WinOS 95</div>
+  <div style="margin-left:24px;">
+    <div class="win-menu-item" onclick="closeStart();openWindow('explorer')">📁 Explorador</div>
+    <div class="win-menu-item" onclick="closeStart();openWindow('notepad')">📝 Bloco de Notas</div>
+    <div style="border-top:1px solid #808080;margin:2px 0;"></div>
+    <div class="win-menu-item" onclick="closeStart();showDialog('Sobre','ℹ️','WinOS 95<br><br>Este computador pertencia a alguém.<br>Agora é seu problema.','OK',null)">ℹ️ Sobre</div>
+    <div style="border-top:1px solid #808080;margin:2px 0;"></div>
+    <div class="win-menu-item" onclick="closeStart()">❌ Fechar</div>
+  </div>
+</div>
+
+<!-- FINAL SCREEN -->
+<div id="final-screen">
+  <div id="final-msg"></div>
+</div>
+
+<!-- INTRO CURTAIN -->
+<div id="intro-curtain">
+  <div id="curtain-top"></div>
+  <div id="curtain-bottom"></div>
+</div>
+
+<!-- INTRO WELCOME WINDOW -->
+<div id="intro-overlay" style="display:none;">
+  <div id="intro-win" class="win" style="position:relative;width:90%;max-width:360px;min-height:auto;z-index:99997;">
+    <div class="win-titlebar">
+      <span class="win-icon">💾</span>
+      <span class="win-title">&gt; Bem vindo ao seu DeskTop!</span>
+      <div class="win-controls">
+        <div class="win-btn">─</div>
+        <div class="win-btn">□</div>
+        <div class="win-btn">✕</div>
+      </div>
+    </div>
+    <div style="padding:16px 20px 20px;background:#c0c0c0;">
+      <div style="background:white;border:2px inset #808080;padding:12px 14px;font-family:'Share Tech Mono',monospace;font-size:12px;line-height:1.8;color:#000;margin-bottom:14px;" id="intro-text"></div>
+      <div style="display:flex;justify-content:center;">
+        <button class="dialog-btn" id="intro-btn" style="padding:5px 28px;font-size:12px;" onclick="startGame()">Continuar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== AUDIO ENGINE =====================
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let actx;
+function getACtx() { if (!actx) actx = new AudioCtx(); return actx; }
+
+function beep(freq=800, dur=0.08, vol=0.2, type='square') {
+  try {
+    const ctx = getACtx();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = freq;
+    o.type = type;
+    g.gain.setValueAtTime(vol, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    o.start(); o.stop(ctx.currentTime + dur);
+  } catch(e){}
+}
+
+function playClick() {
+  try {
+    const ctx = getACtx();
+    // Ruído de impacto mecânico (som de clique de mouse real)
+    const bufSize = ctx.sampleRate * 0.015;
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufSize, 8);
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.35, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.015);
+    // Filtro passa-baixa pra soar mais "clunk"
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 3000;
+    src.connect(filter); filter.connect(g); g.connect(ctx.destination);
+    src.start();
+  } catch(e){}
+}
+function playOpen()   { beep(880, 0.05, 0.2); setTimeout(()=>beep(1100,0.08,0.2),60); }
+function playClose()  { beep(400, 0.1, 0.15, 'triangle'); }
+function playError()  { beep(200, 0.3, 0.3, 'sawtooth'); }
+function playAlert()  { beep(600,0.1,0.3); setTimeout(()=>beep(600,0.1,0.3),150); setTimeout(()=>beep(800,0.2,0.3),300); }
+function playGlitch() {
+  for (let i=0;i<6;i++) setTimeout(()=>beep(Math.random()*2000+200, 0.05, 0.4, 'sawtooth'), i*80);
+}
+function playBoot() {
+  const notes = [261,329,392,523];
+  notes.forEach((n,i)=>setTimeout(()=>beep(n,0.15,0.3,'sine'),i*120));
+}
+function playReveal() {
+  const notes = [523,659,784,1046,784,659,523];
+  notes.forEach((n,i)=>setTimeout(()=>beep(n,0.15,0.4,'sine'),i*150));
+}
+function playTypewriter() { beep(1200,0.02,0.1,'square'); }
+
+// ===================== GAME STATE =====================
+const state = {
+  cluesFound: new Set(),
+  filesOpened: new Set(),
+  passwordAttempts: 0,
+  phase: 1, // 1=exploration, 2=locked folder found, 3=solved
+  windowZ: 100,
+  activeWindow: null,
+};
+
+const CLUES_NEEDED = ['email1','photo_ana','diary','email2','hidden_note'];
+
+// ===================== FILE SYSTEM =====================
+const FILES = {
+  desktop: [
+    { id:'explorer', icon:'🖥️', label:'Meu\nComputador', type:'system' },
+    { id:'recycle',  icon:'🗑️', label:'Lixeira',      type:'system' },
+    { id:'notepad',  icon:'📝', label:'Bloco de\nNotas', type:'system' },
+    { id:'cmd',      icon:'📟', label:'Prompt de\nComando', type:'system' },
+    { id:'youtube',  icon:'yt',  label:'YouTub',        type:'system' },
+    { id:'readme',   icon:'📄', label:'LEIA-ME.txt',  type:'file', folder:'root' },
+  ],
+  root: [
+    { id:'docs',    icon:'📁', label:'Documentos', type:'folder' },
+    { id:'fotos',   icon:'📁', label:'Fotos',      type:'folder' },
+    { id:'emails',  icon:'📁', label:'E-mails',    type:'folder' },
+    { id:'system',  icon:'📁', label:'Sistema',    type:'folder', locked: false },
+    { id:'readme',  icon:'📄', label:'LEIA-ME.txt', type:'txt', content: `LEIA-ME.TXT
+Criado em: 14/03/1997 às 23:47
+
+Se você está lendo isso, encontrou este computador.
+
+Meu nome é MARCO AURÉLIO.
+Trabalho no Instituto de Pesquisa Velasquez há 7 anos.
+
+Preciso que alguém saiba o que está acontecendo.
+
+Não sei quanto tempo tenho.
+
+— M.A.` },
+  ],
+  docs: [
+    { id:'diary',   icon:'📓', label:'diario.txt',   type:'txt', clue:'diary', content: `DIÁRIO PESSOAL - MARCO AURÉLIO
+================================
+
+12/02/1997
+Recebi os resultados hoje. Tentei falar com o Dr. Velasquez
+mas ele evitou o assunto. Algo está errado com os dados.
+Os números não batem com o que publicamos no relatório oficial.
+
+28/02/1997
+Ana veio me ver no laboratório tarde da noite.
+Ela também percebeu. Disse que vai guardar uma cópia
+dos dados originais "em lugar seguro".
+Confio nela.
+
+05/03/1997
+O Dr. V. pediu que eu "revisasse" os documentos.
+Entendi o recado.
+Não vou fazer isso.
+
+12/03/1997
+Ana sumiu. Ninguém do instituto sabe onde ela está.
+Ou fingem não saber.
+
+13/03/1997
+Estou com medo.
+A senha é o nome dela seguido do ano que chegou ao instituto.
+Ela mesma me disse, caso algo acontecesse.
+ANA + ANO` },
+    { id:'relatorio', icon:'📄', label:'relatorio_final.txt', type:'txt', content: `INSTITUTO VELASQUEZ - RELATÓRIO FINAL
+Projeto: AURORA — Fase 3
+Data: 01/03/1997
+Responsável: Dr. H. Velasquez
+
+CONCLUSÃO:
+Todos os testes dentro dos parâmetros esperados.
+Nenhuma anomalia registrada.
+Resultados aprovados para publicação.
+
+[ASSINADO DIGITALMENTE]
+Dr. H. Velasquez — Diretor Chefe` },
+    { id:'relatorio2', icon:'📄', label:'relatorio_REAL.txt', type:'txt', clue:'hidden_note', content: `⚠ ARQUIVO CORROMPIDO — RECUPERAÇÃO PARCIAL
+
+INSTITUTO VELASQUEZ - DADOS BRUTOS
+Projeto: AURORA — Fase 3
+Coletado por: Ana Carvalho / Marco Aurélio
+
+ANOMALIAS DETECTADAS:
+> Amostra 7-C: toxicidade 340% acima do limite
+> Amostra 12-A: mutação celular não documentada
+> Amostra 19-B: reação irreversível em 48h
+
+NOTA: Os dados acima foram REMOVIDOS do relatório
+oficial a pedido do patrocinador.
+
+O patrocinador é: PHARMAX INTERNACIONAL
+
+Estes dados foram ocultados.
+As pessoas que usariam este produto não saberiam.
+
+[ARQUIVO SALVO EM PASTA PROTEGIDA — CÓPIA DE SEGURANÇA]` },
+  ],
+  fotos: [
+    { id:'photo_ana', icon:'🖼️', label:'ana_lab.bmp',   type:'img', clue:'photo_ana', imgType:'lab' },
+    { id:'photo_inst',icon:'🖼️', label:'instituto.bmp', type:'img', imgType:'building' },
+    { id:'photo_doc', icon:'🖼️', label:'foto_documento.bmp', type:'img', imgType:'doc' },
+  ],
+  emails: [
+    { id:'email1', icon:'✉️', label:'De_HV_02mar.txt', type:'txt', clue:'email1', content: `DE: h.velasquez@inst-velasquez.com.br
+PARA: marco.aurelio@inst-velasquez.com.br
+DATA: 02/03/1997 09:14
+ASSUNTO: Revisão de Documentos
+
+Marco,
+
+Como discutimos, peço que você revise os dados da Fase 3
+antes da publicação final.
+
+Alguns números precisam de "ajuste" para ficarem dentro
+do esperado pelos nossos parceiros.
+
+Conto com sua discrição.
+
+— H.V.` },
+    { id:'email2', icon:'✉️', label:'De_Ana_10mar.txt', type:'txt', clue:'email2', content: `DE: ana.carvalho@inst-velasquez.com.br
+PARA: marco.aurelio@inst-velasquez.com.br
+DATA: 10/03/1997 23:52
+ASSUNTO: (sem assunto)
+
+Marco,
+
+Se você está lendo isso, então eu não consigo mais falar
+com você pessoalmente.
+
+Coloquei tudo na pasta AURORA_BACKUP.
+A senha você sabe.
+
+Não confie em ninguém do instituto.
+Não publique nada sem os dados reais.
+
+Cuida-se.
+— Ana
+
+P.S.: Se me perguntarem, eu fui embora de férias. :)
+(não fui)` },
+    { id:'email3', icon:'✉️', label:'De_HV_13mar.txt', type:'txt', content: `DE: h.velasquez@inst-velasquez.com.br
+PARA: marco.aurelio@inst-velasquez.com.br
+DATA: 13/03/1997 18:30
+ASSUNTO: Reunião amanhã
+
+Marco,
+
+Precisamos conversar.
+Sala 3, amanhã às 08h.
+
+Sem falta.
+
+— H.V.
+
+P.S.: Apague seus e-mails antigos. Política de TI.` },
+  ],
+  system: [
+    { id:'aurora_backup', icon:'🔒', label:'AURORA_BACKUP', type:'locked_folder', password:'ANA1990' },
+    { id:'syslog', icon:'📄', label:'system.log', type:'txt', content: `[SYS] 13/03/1997 21:33 — Sessão iniciada: MARCO
+[SYS] 13/03/1997 21:34 — Pasta acessada: /EMAILS
+[SYS] 13/03/1997 21:40 — Pasta acessada: /DOCUMENTOS
+[SYS] 13/03/1997 22:01 — Pasta acessada: /SISTEMA
+[SYS] 13/03/1997 22:03 — Tentativa de acesso: AURORA_BACKUP
+[SYS] 13/03/1997 22:04 — FALHA: senha incorreta
+[SYS] 13/03/1997 22:05 — FALHA: senha incorreta
+[SYS] 13/03/1997 22:07 — Sessão encerrada de forma inesperada.
+[SYS] 14/03/1997 00:00 — Computador ligado sem login.
+[SYS] ??? — Acesso externo detectado.` },
+  ],
+  aurora_backup: [
+    { id:'prova_final', icon:'📄', label:'PROVA_COMPLETA.txt', type:'txt', content: `AURORA_BACKUP / PROVA_COMPLETA.TXT
+Compilado por: Ana Carvalho
+Data: 11/03/1997
+
+========================================
+  INSTITUTO VELASQUEZ + PHARMAX INTL
+  OCULTAÇÃO DE DADOS — PROJETO AURORA
+========================================
+
+O produto desenvolvido no Projeto AURORA apresenta
+toxicidade comprovada em seres humanos acima de
+dosagem mínima recomendada.
+
+O Dr. Velasquez, em acordo com a PHARMAX INTERNACIONAL,
+ordenou a supressão de 14 laudos técnicos antes da
+aprovação pela ANVISA.
+
+O produto está programado para lançamento em 04/1997.
+
+Estimativa de afetados: +200.000 pessoas.
+
+EVIDÊNCIAS NESTE ARQUIVO:
+✔ Laudos originais (laudos_brutos_1a14.zip)
+✔ E-mails entre Velasquez e PHARMAX (correspondencia.zip)
+✔ Contrato de silêncio assinado (contrato_nda.pdf)
+
+SE VOCÊ ENCONTROU ISTO:
+Leve ao Ministério da Saúde.
+Ou à imprensa.
+Faça alguma coisa.
+
+— Ana Carvalho, pesquisadora sênior
+   Instituto Velasquez, São Paulo
+
+[Este arquivo foi protegido por senha por segurança.
+ Se Marco está lendo: obrigada por confiar em mim.]` },
+  ],
+};
+
+// ===================== PIXEL ART IMAGES =====================
+function drawPixelArt(canvas, type) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.imageSmoothingEnabled = false;
+
+  if (type === 'lab') {
+    // Simple lab scene: a person at a microscope
+    ctx.fillStyle = '#c8e0f0'; ctx.fillRect(0,0,W,H);
+    // floor
+    ctx.fillStyle = '#a0a0b0'; ctx.fillRect(0,H*0.65,W,H*0.35);
+    // table
+    ctx.fillStyle = '#8B7355'; ctx.fillRect(W*0.1,H*0.5,W*0.8,H*0.15);
+    // microscope
+    ctx.fillStyle = '#303030'; ctx.fillRect(W*0.55,H*0.25,W*0.08,H*0.26);
+    ctx.fillStyle = '#505050'; ctx.fillRect(W*0.5,H*0.45,W*0.18,H*0.06);
+    ctx.fillStyle = '#404040'; ctx.fillRect(W*0.57,H*0.2,W*0.06,H*0.08);
+    // person
+    ctx.fillStyle = '#F4C2A1'; ctx.fillRect(W*0.3,H*0.2,W*0.12,H*0.12); // head
+    ctx.fillStyle = '#2a4a8a'; ctx.fillRect(W*0.28,H*0.32,W*0.16,H*0.22); // body (lab coat blue)
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(W*0.26,H*0.32,W*0.04,H*0.2); // arm
+    ctx.fillStyle = '#404040'; ctx.fillRect(W*0.3,H*0.54,W*0.05,H*0.12); // leg L
+    ctx.fillStyle = '#404040'; ctx.fillRect(W*0.38,H*0.54,W*0.05,H*0.12); // leg R
+    // hair
+    ctx.fillStyle = '#2a1a0a'; ctx.fillRect(W*0.3,H*0.17,W*0.12,H*0.06);
+    // label
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(0, H-18, W, 18);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '10px "Share Tech Mono", monospace';
+    ctx.fillText('Ana Carvalho — Lab. 3 — Fev 1997', 4, H-5);
+  } else if (type === 'building') {
+    // Building exterior
+    ctx.fillStyle = '#87CEEB'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#909090'; ctx.fillRect(W*0.1,H*0.25,W*0.8,H*0.7);
+    ctx.fillStyle = '#b0b0b0'; ctx.fillRect(W*0.1,H*0.2,W*0.8,H*0.08);
+    // windows
+    for(let r=0;r<3;r++) for(let c=0;c<5;c++){
+      const wx = W*0.14 + c*(W*0.14), wy = H*0.35 + r*(H*0.15);
+      ctx.fillStyle = r===1&&c===2 ? '#ffff80' : '#6090c0';
+      ctx.fillRect(wx,wy,W*0.1,H*0.1);
+      ctx.strokeStyle='#505050'; ctx.strokeRect(wx,wy,W*0.1,H*0.1);
+    }
+    // door
+    ctx.fillStyle='#5a3a1a'; ctx.fillRect(W*0.44,H*0.75,W*0.12,H*0.2);
+    // sign
+    ctx.fillStyle='#ffffff'; ctx.fillRect(W*0.2,H*0.22,W*0.6,H*0.05);
+    ctx.fillStyle='#000080';
+    ctx.font='9px "Share Tech Mono"';
+    ctx.fillText('INSTITUTO DE PESQUISA VELASQUEZ', W*0.21, H*0.26);
+    // ground
+    ctx.fillStyle='#4a7a3a'; ctx.fillRect(0,H*0.9,W,H*0.1);
+  } else if (type === 'doc') {
+    // Document photo
+    ctx.fillStyle = '#d0c8a0'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#fff8e8'; ctx.fillRect(W*0.1,H*0.05,W*0.8,H*0.9);
+    ctx.strokeStyle='#808060'; ctx.strokeRect(W*0.1,H*0.05,W*0.8,H*0.9);
+    ctx.fillStyle='#000080';
+    ctx.font='bold 11px "Share Tech Mono"';
+    ctx.fillText('CONTRATO — PHARMAX INTL', W*0.14, H*0.15);
+    ctx.fillStyle='#333';
+    ctx.font='8px "Share Tech Mono"';
+    const lines = ['Cláusula 4.2: Dados que contrariem','os resultados esperados deverão','ser descontinuados antes da','publicação final.','','Assinado: Dr. H. Velasquez','Data: 25/01/1997','','[ASSINATURA ILEGÍVEL — PHARMAX]'];
+    lines.forEach((l,i) => ctx.fillText(l, W*0.14, H*0.28 + i*H*0.07));
+    // red stamp
+    ctx.strokeStyle='rgba(200,0,0,0.6)'; ctx.lineWidth=2;
+    ctx.strokeRect(W*0.55,H*0.65,W*0.3,H*0.15);
+    ctx.fillStyle='rgba(200,0,0,0.5)';
+    ctx.font='bold 10px "Share Tech Mono"';
+    ctx.fillText('CONFIDENCIAL', W*0.56, H*0.75);
+    ctx.lineWidth=1;
+  }
+}
+
+// ===================== WINDOW MANAGER =====================
+let windows = {};
+let dragState = null;
+
+function createWindow(id, title, icon, width, height, content, x, y) {
+  if (windows[id]) { focusWindow(id); return; }
+
+  const win = document.createElement('div');
+  win.className = 'win';
+  win.id = 'win-' + id;
+  win.style.width = width + 'px';
+  win.style.height = height + 'px';
+  const isMobile = window.innerWidth <= 600;
+  const defaultX = isMobile ? Math.max(0, (window.innerWidth - width) / 2) : (80 + Object.keys(windows).length * 20);
+  const defaultY = isMobile ? 20 : (60 + Object.keys(windows).length * 20);
+  win.style.left = (x !== undefined ? x : defaultX) + 'px';
+  win.style.top  = (y !== undefined ? y : defaultY) + 'px';
+  win.style.zIndex = ++state.windowZ;
+
+  win.innerHTML = `
+    <div class="win-titlebar" id="tb-${id}">
+      <span class="win-icon">${icon}</span>
+      <span class="win-title">${title}</span>
+      <div class="win-controls">
+        <div class="win-btn" onclick="minimizeWindow('${id}')">_</div>
+        <div class="win-btn" onclick="maximizeWindow('${id}')">□</div>
+        <div class="win-btn" style="font-weight:bold;" onclick="closeWindow('${id}')">✕</div>
+      </div>
+    </div>
+    <div class="win-content" id="wc-${id}">${content}</div>
+    <div class="win-statusbar" id="ws-${id}">Pronto</div>
+  `;
+
+  document.getElementById('desktop').appendChild(win);
+  windows[id] = { minimized: false, title, icon };
+
+  const tb = document.getElementById('tb-' + id);
+  function startDrag(e) {
+    const pos = getEventPos(e);
+    dragState = { id, startX: pos.x - win.offsetLeft, startY: pos.y - win.offsetTop };
+    focusWindow(id);
+  }
+  tb.addEventListener('mousedown', startDrag);
+  tb.addEventListener('touchstart', startDrag, { passive: true });
+
+  // Focus on click/touch
+  win.addEventListener('mousedown', () => focusWindow(id));
+  win.addEventListener('touchstart', () => focusWindow(id), { passive: true });
+
+  focusWindow(id);
+  updateTaskbar();
+  playOpen();
+}
+
+function getEventPos(e) {
+  if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  return { x: e.clientX, y: e.clientY };
+}
+
+function onDragMove(e) {
+  if (!dragState) return;
+  if (e.cancelable) e.preventDefault();
+  const win = document.getElementById('win-' + dragState.id);
+  if (!win) return;
+  const pos = getEventPos(e);
+  win.style.left = Math.max(0, pos.x - dragState.startX) + 'px';
+  win.style.top  = Math.max(0, Math.min(pos.y - dragState.startY, window.innerHeight - 60)) + 'px';
+}
+
+function onDragEnd() { dragState = null; }
+
+document.addEventListener('mousemove', onDragMove);
+document.addEventListener('mouseup', onDragEnd);
+document.addEventListener('touchmove', onDragMove, { passive: false });
+document.addEventListener('touchend', onDragEnd);
+
+function focusWindow(id) {
+  const win = document.getElementById('win-' + id);
+  if (!win) return;
+  win.style.zIndex = ++state.windowZ;
+  state.activeWindow = id;
+  // Update titlebar colors
+  document.querySelectorAll('.win-titlebar').forEach(tb => {
+    tb.style.background = 'linear-gradient(90deg, #808080, #a0a0a0)';
+  });
+  document.getElementById('tb-' + id).style.background = 'linear-gradient(90deg, #000080, #1084d0)';
+}
+
+function closeWindow(id) {
+  playClose();
+  const win = document.getElementById('win-' + id);
+  if (win) win.remove();
+  delete windows[id];
+  updateTaskbar();
+}
+
+function minimizeWindow(id) {
+  playClick();
+  const win = document.getElementById('win-' + id);
+  if (win) win.style.display = 'none';
+  windows[id].minimized = true;
+  updateTaskbar();
+}
+
+function maximizeWindow(id) {
+  playClick();
+  const win = document.getElementById('win-' + id);
+  if (!win) return;
+  win.style.left = '0'; win.style.top = '0';
+  win.style.width = '100%'; win.style.height = 'calc(100vh - 30px)';
+}
+
+function restoreWindow(id) {
+  playClick();
+  const win = document.getElementById('win-' + id);
+  if (win) win.style.display = 'flex';
+  if (windows[id]) windows[id].minimized = false;
+  focusWindow(id);
+  updateTaskbar();
+}
+
+function updateTaskbar() {
+  const container = document.getElementById('taskbar-items');
+  container.innerHTML = '';
+  Object.entries(windows).forEach(([id, data]) => {
+    const btn = document.createElement('div');
+    btn.className = 'taskbar-item' + (state.activeWindow === id ? ' active' : '');
+    btn.textContent = data.icon + ' ' + data.title;
+    btn.onclick = () => data.minimized ? restoreWindow(id) : focusWindow(id);
+    container.appendChild(btn);
+  });
+}
+
+// ===================== OPEN FILE/FOLDER =====================
+function openWindow(id, folder) {
+  playClick();
+  state.filesOpened.add(id);
+
+  if (id === 'explorer' || id === 'root') {
+    openExplorer('root', 'Meu Computador', '🖥️');
+  } else if (id === 'notepad') {
+    openNotepad();
+  } else if (id === 'cmd') {
+    openCmd();
+  } else if (id === 'youtube') {
+    openYouTube();
+  } else if (id === 'recycle') {
+    showDialog('Lixeira', '🗑️', 'A Lixeira está vazia.<br><br>...ou não estava.', 'OK', null);
+  } else {
+    const file = findFile(id);
+    if (!file) return;
+    if (file.type === 'folder') openExplorer(id, file.label, '📁');
+    else if (file.type === 'locked_folder') openLockedFolder(file);
+    else if (file.type === 'txt') openTextFile(file);
+    else if (file.type === 'img') openImage(file);
+    else if (file.type === 'system') openWindow(id);
+  }
+}
+
+function findFile(id) {
+  for (const key in FILES) {
+    const found = FILES[key].find(f => f.id === id);
+    if (found) return found;
+  }
+  return null;
+}
+
+function openExplorer(folderId, title, icon) {
+  const files = FILES[folderId] || [];
+  const gridHTML = `
+    <div style="background:#c0c0c0;padding:2px 4px;display:flex;gap:8px;border-bottom:1px solid #808080;font-size:11px;margin-bottom:4px;">
+      <span>📍 C:\\${folderId === 'root' ? '' : folderId.toUpperCase()}</span>
+    </div>
+    <div class="file-grid">
+      ${files.map(f => `
+        <div class="file-item" ondblclick="openWindow('${f.id}','${folderId}')" onclick="playClick()">
+          <div class="fi-icon">${f.icon}</div>
+          <div class="fi-name">${f.label}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  if (windows['explorer-' + folderId]) { focusWindow('explorer-' + folderId); return; }
+  createWindow('explorer-' + folderId, title, icon, 440, 320, gridHTML);
+
+  const menubar = document.createElement('div');
+  menubar.className = 'win-menubar';
+  menubar.innerHTML = `<span class="win-menu-item">Arquivo</span><span class="win-menu-item">Editar</span><span class="win-menu-item">Exibir</span><span class="win-menu-item">Ajuda</span>`;
+  const win = document.getElementById('win-explorer-' + folderId);
+  const titlebar = win.querySelector('.win-titlebar');
+  titlebar.after(menubar);
+
+  setTimeout(() => {
+    const winEl = document.getElementById('win-explorer-' + folderId);
+    if (!winEl) return;
+    winEl.querySelectorAll('.file-item').forEach(item => {
+      let lastTap = 0;
+      item.addEventListener('touchend', (e) => {
+        const now = Date.now();
+        if (now - lastTap < 350) { e.preventDefault(); item.ondblclick && item.ondblclick(); }
+        lastTap = now;
+      });
+    });
+  }, 100);
+}
+
+function openTextFile(file) {
+  if (file.clue) addClue(file.clue);
+  createWindow('txt-' + file.id, file.label, '📝', 420, 320,
+    `<div class="text-content">${file.content}</div>`);
+  document.getElementById('ws-txt-' + file.id).textContent = 'Ln 1, Col 1';
+}
+
+function openImage(file) {
+  if (file.clue) addClue(file.clue);
+  const winId = 'img-' + file.id;
+  const canvasId = 'canvas-' + file.id;
+  createWindow(winId, file.label, '🖼️', 340, 300,
+    `<div class="img-content"><div class="photo-frame"><canvas id="${canvasId}" width="280" height="210" class="img-canvas"></canvas></div></div>`);
+  setTimeout(() => {
+    const canvas = document.getElementById(canvasId);
+    if (canvas) drawPixelArt(canvas, file.imgType);
+  }, 50);
+}
+
+function openNotepad() {
+  createWindow('notepad', 'Bloco de Notas', '📝', 380, 280,
+    `<textarea class="notepad-content" placeholder="Digite algo aqui..."></textarea>`);
+  // override content area
+  setTimeout(() => {
+    const wc = document.getElementById('wc-notepad');
+    if (wc) { wc.style.padding = '0'; }
+  }, 10);
+}
+
+// ===================== PROMPT DE COMANDO =====================
+function openCmd() {
+  if (windows['cmd']) { focusWindow('cmd'); return; }
+
+  // Criar janela vazia
+  createWindow('cmd', 'Prompt de Comando', '▪', 620, 420, '');
+
+  // Pintar a janela de preto
+  const winEl = document.getElementById('win-cmd');
+  winEl.style.background = '#000';
+  const titlebar = winEl.querySelector('.win-titlebar');
+  titlebar.style.background = '#000';
+  titlebar.style.borderBottom = '1px solid #333';
+  titlebar.querySelectorAll('.win-btn').forEach(b => {
+    b.style.background = '#222'; b.style.color = '#aaa'; b.style.borderColor = '#555 #111 #111 #555';
+  });
+
+  // Montar o corpo do terminal diretamente no win-content
+  const wc = document.getElementById('wc-cmd');
+  wc.style.cssText = 'flex:1;overflow-y:auto;overflow-x:hidden;padding:8px;margin:0;background:#000;border:none;display:block;';
+
+  // Ocultar statusbar
+  const ws = document.getElementById('ws-cmd');
+  if (ws) ws.style.display = 'none';
+
+  // Estado
+  const S = { history: [], histIdx: -1, dir: 'C:\\WINDOWS', busy: false };
+
+  // Função central: adiciona uma linha e scrolla
+  function addLine(text, color) {
+    const el = document.createElement('div');
+    el.style.cssText = `font-family:'Share Tech Mono',monospace;font-size:15px;line-height:1.55;white-space:pre;color:${color || '#c0c0c0'};`;
+    el.textContent = text;
+    // Inserir antes do input se já existir
+    const inputRow = wc.querySelector('#cmd-row');
+    if (inputRow) wc.insertBefore(el, inputRow);
+    else wc.appendChild(el);
+    wc.scrollTop = wc.scrollHeight;
+    return el;
+  }
+
+  // Espera N ms
+  function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  // Adiciona linha com delay depois
+  async function println(text, color, ms) {
+    addLine(text, color);
+    if (ms) await wait(ms);
+  }
+
+  // Criar prompt de entrada
+  function mountInput() {
+    const row = document.createElement('div');
+    row.id = 'cmd-row';
+    row.style.cssText = 'display:flex;align-items:center;font-family:"Share Tech Mono",monospace;font-size:15px;color:#c0c0c0;margin-top:2px;';
+
+    const lbl = document.createElement('span');
+    lbl.id = 'cmd-lbl';
+    lbl.style.cssText = 'white-space:nowrap;flex-shrink:0;';
+    lbl.textContent = S.dir + '>';
+
+    const inp = document.createElement('input');
+    inp.id = 'cmd-inp';
+    inp.type = 'text';
+    inp.autocomplete = 'off'; inp.autocorrect = 'off';
+    inp.autocapitalize = 'off'; inp.spellcheck = false;
+    inp.style.cssText = 'flex:1;background:transparent;border:none;outline:none;color:#c0c0c0;font-family:"Share Tech Mono",monospace;font-size:15px;caret-color:#c0c0c0;padding:0 2px;';
+
+    row.appendChild(lbl);
+    row.appendChild(inp);
+    wc.appendChild(row);
+    wc.scrollTop = wc.scrollHeight;
+
+    inp.addEventListener('keydown', onKey);
+    wc.addEventListener('click', () => inp.focus());
+    setTimeout(() => inp.focus(), 60);
+  }
+
+  function onKey(e) {
+    if (S.busy) return;
+    const inp = document.getElementById('cmd-inp');
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const raw = inp.value;
+      inp.value = '';
+      // Mostrar o que foi digitado como linha permanente
+      addLine(S.dir + '>' + raw, '#ffffff');
+      if (raw.trim()) S.history.unshift(raw.trim());
+      S.histIdx = -1;
+      runCmd(raw.trim().toLowerCase());
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (S.histIdx < S.history.length - 1) inp.value = S.history[++S.histIdx];
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      S.histIdx > 0 ? inp.value = S.history[--S.histIdx] : (inp.value = '', S.histIdx = -1);
+    }
+  }
+
+  async function runCmd(cmd) {
+    S.busy = true;
+    const inp = document.getElementById('cmd-inp');
+    if (inp) inp.disabled = true;
+
+    if (!cmd) {
+      // nada
+    } else if (cmd === 'cls') {
+      wc.querySelectorAll('div:not(#cmd-row)').forEach(e => e.remove());
+    } else if (cmd === 'help') {
+      await println('', null, 0);
+      await println('Comandos disponíveis:', '#ffffff', 60);
+      await println('  CLS          Limpa a tela',          '#c0c0c0', 50);
+      await println('  DIR          Lista arquivos',         '#c0c0c0', 50);
+      await println('  CD [pasta]   Muda de diretório',      '#c0c0c0', 50);
+      await println('  VER          Versão do Windows',      '#c0c0c0', 50);
+      await println('  TIME         Hora atual',             '#c0c0c0', 50);
+      await println('  DATE         Data atual',             '#c0c0c0', 50);
+      await println('  ECHO [msg]   Exibe mensagem',         '#c0c0c0', 50);
+      await println('  EXIT         Fecha o prompt',         '#c0c0c0', 50);
+      await println('', null, 0);
+    } else if (cmd === 'ver') {
+      await println('', null, 0);
+      await println('Microsoft Windows [Versão 4.00.950]', '#ffffff', 0);
+      await println('', null, 0);
+    } else if (cmd === 'date') {
+      await println('Data atual: Qui 13/03/1997', '#c0c0c0', 0);
+      await println('', null, 0);
+    } else if (cmd === 'time') {
+      const n = new Date();
+      await println(`Hora atual: ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}.00`, '#c0c0c0', 0);
+      await println('', null, 0);
+    } else if (cmd.startsWith('echo ')) {
+      await println(cmd.slice(5), '#ffffff', 0);
+      await println('', null, 0);
+    } else if (cmd === 'dir') {
+      await println('', null, 0);
+      await println(` O volume na unidade C não tem nome.`,           '#c0c0c0', 40);
+      await println(` Número de série: 1A4F-9C2B`,                   '#c0c0c0', 40);
+      await println('',                                               null,      40);
+      await println(` Pasta de ${S.dir}`,                            '#c0c0c0', 40);
+      await println('',                                               null,      40);
+      await println(`13/03/97  22:03    <DIR>    .`,                  '#c0c0c0', 40);
+      await println(`13/03/97  22:03    <DIR>    ..`,                 '#c0c0c0', 40);
+      await println(`12/03/97  09:14      2.048  COMMAND.COM`,        '#c0c0c0', 40);
+      await println(`12/03/97  09:14      1.024  weekd.exe`,          '#ffff55', 40);
+      await println(`05/02/97  14:22     16.384  SYSTEM.INI`,         '#c0c0c0', 40);
+      await println(`05/02/97  14:22     32.768  WIN.INI`,            '#c0c0c0', 40);
+      await println(`         4 arquivo(s)   52.224 bytes`,           '#c0c0c0', 40);
+      await println(`         2 pasta(s)  1.234.567 bytes livres`,    '#c0c0c0', 40);
+      await println('',                                               null,      0);
+    } else if (cmd.startsWith('cd ')) {
+      const dest = cmd.slice(3).trim().toUpperCase();
+      S.dir = dest === '..' ? 'C:\\' : 'C:\\' + dest;
+      const lbl = document.getElementById('cmd-lbl');
+      if (lbl) lbl.textContent = S.dir + '>';
+      await println('', null, 0);
+    } else if (cmd === 'exit') {
+      closeWindow('cmd');
+      return;
+    } else if (cmd === 'weekd.exe' || cmd === 'weekd') {
+      playError();
+      await println('', null, 0);
+      await println('ERRO: Permissão negada.', '#ff5555', 80);
+      await println('Use: grant weekd.exe system.access', '#ffff55', 0);
+      await println('', null, 0);
+    } else if (cmd === 'grant weekd.exe system.access') {
+      await runDownload();
+      S.busy = false;
+      const i = document.getElementById('cmd-inp');
+      if (i) { i.disabled = false; i.focus(); }
+      return;
+    } else {
+      playError();
+      await println('', null, 0);
+      await println(`'${cmd}' não é reconhecido como comando interno`, '#ff5555', 50);
+      await println(`ou externo, programa operável ou arquivo em lotes.`, '#ff5555', 0);
+      await println('', null, 0);
+    }
+
+    S.busy = false;
+    const i = document.getElementById('cmd-inp');
+    if (i) { i.disabled = false; i.focus(); }
+    wc.scrollTop = wc.scrollHeight;
+  }
+
+  // ---- DOWNLOAD SEQUENCE ----
+  async function runDownload() {
+    const inp = document.getElementById('cmd-inp');
+    if (inp) inp.disabled = true;
+
+    const H4  = () => Array.from({length:4}, ()=>Math.floor(Math.random()*256).toString(16).padStart(2,'0').toUpperCase()).join('');
+    const H8  = () => Array.from({length:8}, ()=>Math.floor(Math.random()*256).toString(16).padStart(2,'0').toUpperCase()).join('');
+    const H16 = () => Array.from({length:16},()=>Math.floor(Math.random()*256).toString(16).padStart(2,'0').toUpperCase()).join('');
+    const H20 = () => Array.from({length:20},()=>Math.floor(Math.random()*256).toString(16).padStart(2,'0').toUpperCase()).join('');
+    const H32 = () => Array.from({length:32},()=>Math.floor(Math.random()*256).toString(16).padStart(2,'0').toUpperCase()).join('');
+    const TS  = () => { const n=new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0')+'.'+String(Math.floor(Math.random()*999)).padStart(3,'0'); };
+    const ri  = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+    const hdump = (base,n) => Array.from({length:n},(_,i)=>{
+      const addr=(base+i*16).toString(16).toUpperCase().padStart(8,'0');
+      const bytes=Array.from({length:16},()=>Math.floor(Math.random()*256).toString(16).padStart(2,'0').toUpperCase()).join(' ');
+      const asc=Array.from({length:16},()=>String.fromCharCode(ri(33,126))).join('');
+      return [addr+'  '+bytes+'  |'+asc+'|', W];
+    });
+    const W = '#ffffff';
+
+    const seq = [
+      ['', W],
+      ['weekd.exe  v2.1.4  build WIN32_RELEASE  arch x86', W],
+      ['PID: '+ri(1000,65000)+'  PPID: '+ri(100,999)+'  TID: '+ri(1000,9999), W],
+      ['ImageBase: 0x'+H8()+'  EntryPoint: 0x'+H8(), W],
+      ['Stack: 0x'+H8()+'-0x'+H8()+'  Heap: 0x'+H8(), W],
+      ['', W],
+      ['--- PHASE 1: RUNTIME INIT ---', W],
+      ['LoadLibrary(kernel32.dll)    base=0x'+H8()+'  OK', W],
+      ['LoadLibrary(ntdll.dll)       base=0x'+H8()+'  OK', W],
+      ['LoadLibrary(advapi32.dll)    base=0x'+H8()+'  OK', W],
+      ['LoadLibrary(wsock32.dll)     base=0x'+H8()+'  OK', W],
+      ['LoadLibrary(crypt32.dll)     base=0x'+H8()+'  OK', W],
+      ['LoadLibrary(msvcrt.dll)      base=0x'+H8()+'  OK', W],
+      ['LoadLibrary(secur32.dll)     base=0x'+H8()+'  OK', W],
+      ['GetProcAddress(NtOpenProcessToken)       0x'+H8(), W],
+      ['GetProcAddress(AdjustTokenPrivileges)    0x'+H8(), W],
+      ['GetProcAddress(NtQuerySystemInformation) 0x'+H8(), W],
+      ['GetProcAddress(RtlAllocateHeap)          0x'+H8(), W],
+      ['GetProcAddress(WSAStartup)               0x'+H8(), W],
+      ['GetProcAddress(SSL_connect)              0x'+H8(), W],
+      ['VirtualAlloc(0x00000000, 524288, MEM_COMMIT) -> OK', W],
+      ['Heap created at 0x'+H8()+'  size=1048576', W],
+      ['', W],
+      ['--- PHASE 2: PRIVILEGE ESCALATION ---', W],
+      ['NtOpenProcessToken(0xFFFFFFFF, TOKEN_ALL_ACCESS) -> handle=0x'+H4(), W],
+      ['NtQueryInformationToken(TokenUser) -> SID: S-1-5-21-'+ri(100000,999999)+'-'+ri(100000,999999)+'-'+ri(1000,9999), W],
+      ['NtQueryInformationToken(TokenIntegrityLevel) -> HIGH (0x3000)', W],
+      ['AdjustTokenPrivileges(SeDebugPrivilege)         -> ENABLED', W],
+      ['AdjustTokenPrivileges(SeTcbPrivilege)           -> ENABLED', W],
+      ['AdjustTokenPrivileges(SeBackupPrivilege)        -> ENABLED', W],
+      ['AdjustTokenPrivileges(SeRestorePrivilege)       -> ENABLED', W],
+      ['AdjustTokenPrivileges(SeLoadDriverPrivilege)    -> ENABLED', W],
+      ['AdjustTokenPrivileges(SeShutdownPrivilege)      -> ENABLED', W],
+      ['AdjustTokenPrivileges(SeSystemtimePrivilege)    -> ENABLED', W],
+      ['AdjustTokenPrivileges(SeImpersonatePrivilege)   -> ENABLED', W],
+      ['AdjustTokenPrivileges(SeCreateTokenPrivilege)   -> ENABLED', W],
+      ['AdjustTokenPrivileges(SeTakeOwnershipPrivilege) -> ENABLED', W],
+      ['Token elevation complete. All 10 privileges granted.', W],
+      ['', W],
+      ['--- PHASE 3: NTLM AUTHENTICATION ---', W],
+      ['SSPI: AcquireCredentialsHandle(NTLM) -> hCred=0x'+H8(), W],
+      ['SSPI: InitializeSecurityContext() -> ISC_REQ_CONFIDENTIALITY | ISC_REQ_REPLAY_DETECT', W],
+      ['NTLM Type1 NEGOTIATE_MESSAGE:', W],
+      ['  Signature:    NTLMSSP\\0', W],
+      ['  MessageType:  0x00000001', W],
+      ['  Flags:        NEGOTIATE_UNICODE | NEGOTIATE_OEM | NEGOTIATE_NTLM', W],
+      ['  Workstation:  VELASQUEZ-PC01', W],
+      ['  Domain:       VELASQUEZ-CORP', W],
+      ['NTLM Type2 CHALLENGE_MESSAGE:', W],
+      ['  ServerChallenge: '+H16(), W],
+      ['  TargetName:      VELASQUEZ-CORP', W],
+      ['  Flags:           NTLMSSP_NEGOTIATE_NTLM | NTLMSSP_REQUEST_NON_NT_SESSION_KEY', W],
+      ['NTLM Type3 AUTHENTICATE_MESSAGE:', W],
+      ['  NTHash:          '+H16(), W],
+      ['  LMHash:          '+H16(), W],
+      ['  SessionBaseKey:  '+H16(), W],
+      ['  KeyExchangeKey:  '+H16(), W],
+      ['  EncryptedRandSK: '+H16(), W],
+      ['  User:            MARCO_AURELIO', W],
+      ['  Domain:          VELASQUEZ-CORP', W],
+      ['  Workstation:     VELASQUEZ-PC01', W],
+      ['  Access Level:    SYSTEM_ROOT | FULL_CONTROL | WRITE_DAC', W],
+      ['  STATUS_SUCCESS', W],
+      ['', W],
+      ['--- PHASE 4: DNS & SOCKET ---', W],
+      ['WSAStartup(2.1) wVersion=0x0201 wHighVersion=0x0202  OK', W],
+      ['getaddrinfo("secure.velasquez-backup.net", AF_INET)', W],
+      ['  -> 187.54.210.33  TTL=300s', W],
+      ['socket(AF_INET, SOCK_STREAM, IPPROTO_TCP) -> fd='+ri(3,99), W],
+      ['setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, 1)  OK', W],
+      ['setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, 1)  OK', W],
+      ['setsockopt(fd, SOL_SOCKET, SO_SNDBUF, 65536) OK', W],
+      ['setsockopt(fd, SOL_SOCKET, SO_RCVBUF, 65536) OK', W],
+      ['connect(187.54.210.33:8472) ...', W],
+      ['  ['+TS()+']  SYN      seq='+H8()+'  win=65535  mss=1460', W],
+      ['  ['+TS()+']  SYN-ACK  seq='+H8()+'  ack='+H8()+'  win=65535', W],
+      ['  ['+TS()+']  ACK      seq='+H8()+'  ack='+H8(), W],
+      ['connect() STATUS_SUCCESS  RTT='+ri(80,400)+'ms', W],
+      ['', W],
+      ['--- PHASE 5: TLS 1.0 HANDSHAKE ---', W],
+      ['ClientHello:', W],
+      ['  Version:          TLS 1.0 (0x0301)', W],
+      ['  Random:           '+H32(), W],
+      ['  SessionID:        '+H16(), W],
+      ['  CipherSuites:     TLS_RSA_WITH_RC4_128_SHA, TLS_RSA_WITH_3DES_EDE_CBC_SHA', W],
+      ['  CompressionMeth:  null', W],
+      ['ServerHello:', W],
+      ['  Version:          TLS 1.0 (0x0301)', W],
+      ['  Random:           '+H32(), W],
+      ['  CipherSuite:      TLS_RSA_WITH_RC4_128_SHA (0x0005)', W],
+      ['Certificate:', W],
+      ['  Subject:    CN=velasquez-backup.net, O=SysTech Corp, C=BR', W],
+      ['  Issuer:     CN=SysTechCA, O=SysTech Corp, C=BR', W],
+      ['  Serial:     '+H8(), W],
+      ['  Validity:   01/01/1997 - 31/12/1999', W],
+      ['  Fingerprint: '+H20(), W],
+      ['ClientKeyExchange:', W],
+      ['  PreMasterSecret: '+H32(), W],
+      ['  MasterSecret:    '+H32(), W],
+      ['  ClientWriteKey:  '+H16(), W],
+      ['  ServerWriteKey:  '+H16(), W],
+      ['  ClientWriteIV:   '+H8(), W],
+      ['  ServerWriteIV:   '+H8(), W],
+      ['ChangeCipherSpec -> Finished', W],
+      ['Handshake complete. Encrypted channel established.', W],
+      ['', W],
+      ['--- PHASE 6: HTTP REQUEST ---', W],
+      ['> GET /v2/pkg/AURORA_EVIDENCE?token=SYSROOT&v=4.2.0&fmt=raw HTTP/1.0', W],
+      ['> Host: secure.velasquez-backup.net', W],
+      ['> Connection: keep-alive', W],
+      ['> Authorization: Bearer '+H32(), W],
+      ['> X-Client-ID: weekd/'+H8(), W],
+      ['> X-Request-ID: '+H16(), W],
+      ['> Accept: application/octet-stream', W],
+      ['> Accept-Encoding: identity', W],
+      ['', W],
+      ['< HTTP/1.0 200 OK', W],
+      ['< Server: SysTech-HTTPD/1.2', W],
+      ['< Date: Thu, 13 Mar 1997 22:07:'+ri(10,59)+' GMT', W],
+      ['< Content-Type: application/octet-stream', W],
+      ['< Content-Length: 2143872', W],
+      ['< X-Pkg-Name: AURORA_EVIDENCE_PKG', W],
+      ['< X-Pkg-Version: 4.2.0', W],
+      ['< X-Pkg-Files: 19', W],
+      ['< X-Pkg-SHA256: '+H32(), W],
+      ['< X-Classification: RESTRICTED', W],
+      ['< X-Origin: INST_VELASQUEZ/LAB3/ANA_CARVALHO', W],
+      ['< X-Created: 1997-03-11T23:52:00Z', W],
+      ['< X-Request-ID: '+H16(), W],
+      ['', W],
+      ['--- PHASE 7: DATA STREAM (HEX DUMP) ---', W],
+      ...hdump(0x00000000,10),
+      ['['+TS()+']  recv  4096B  seq=0x'+H8()+'  ack=0x'+H8()+'  cwnd=65535', W],
+      ['['+TS()+']  recv  4096B  seq=0x'+H8()+'  ack=0x'+H8()+'  cwnd=65535', W],
+      ['['+TS()+']  recv  8192B  seq=0x'+H8()+'  ack=0x'+H8()+'  cwnd=65535', W],
+      ['['+TS()+']  recv  8192B  seq=0x'+H8()+'  ack=0x'+H8()+'  cwnd=65535', W],
+      ['['+TS()+']  recv 16384B  seq=0x'+H8()+'  ack=0x'+H8()+'  cwnd=65535', W],
+      ...hdump(0x00005000,10),
+      ['['+TS()+']  recv 16384B  seq=0x'+H8()+'  ack=0x'+H8()+'  cwnd=65535', W],
+      ['['+TS()+']  recv 16384B  seq=0x'+H8()+'  ack=0x'+H8()+'  cwnd=65535', W],
+      ['['+TS()+']  recv 32768B  seq=0x'+H8()+'  ack=0x'+H8()+'  cwnd=65535', W],
+      ['['+TS()+']  recv 32768B  seq=0x'+H8()+'  ack=0x'+H8()+'  cwnd=65535', W],
+      ...hdump(0x0000F000,10),
+      ['['+TS()+']  recv 32768B  seq=0x'+H8()+'  ack=0x'+H8()+'  cwnd=65535', W],
+      ['['+TS()+']  recv 65536B  seq=0x'+H8()+'  ack=0x'+H8()+'  cwnd=65535', W],
+      ['['+TS()+']  recv 65536B  seq=0x'+H8()+'  ack=0x'+H8()+'  cwnd=65535', W],
+      ...hdump(0x0002A000,10),
+      ['['+TS()+']  recv 65536B  seq=0x'+H8()+'  ack=0x'+H8()+'  cwnd=65535', W],
+      ['['+TS()+']  recv 65536B  seq=0x'+H8()+'  ack=0x'+H8()+'  cwnd=65535', W],
+      ['['+TS()+']  recv 65536B  seq=0x'+H8()+'  ack=0x'+H8()+'  cwnd=65535', W],
+      ...hdump(0x00060000,10),
+      ['['+TS()+']  recv 65536B  seq=0x'+H8()+'  ack=0x'+H8()+'  cwnd=65535', W],
+      ['['+TS()+']  recv 65536B  seq=0x'+H8()+'  ack=0x'+H8()+'  cwnd=65535', W],
+      ...hdump(0x000A0000,10),
+      ['['+TS()+']  recv 65536B  seq=0x'+H8()+'  ack=0x'+H8()+'  cwnd=65535', W],
+      ['['+TS()+']  recv 65536B  seq=0x'+H8()+'  ack=0x'+H8()+'  cwnd=65535', W],
+      ...hdump(0x000E0000,10),
+      ['['+TS()+']  recv 65536B  seq=0x'+H8()+'  ack=0x'+H8()+'  cwnd=65535', W],
+      ['['+TS()+']  recv 65536B  seq=0x'+H8()+'  ack=0x'+H8()+'  cwnd=65535', W],
+      ...hdump(0x00120000,10),
+      ['['+TS()+']  Transfer complete. 2143872 bytes. 0 retransmissions. 0 errors.', W],
+      ['['+TS()+']  FIN -> ACK. Socket shutdown(SHUT_RDWR). fd closed.', W],
+      ['', W],
+      ['--- PHASE 8: STREAM INTEGRITY ---', W],
+      ['Adler32  stream = 0x'+H8()+'   expected = 0x'+H8()+'   MATCH', W],
+      ['CRC32    stream = 0x'+H8()+'   expected = 0x'+H8()+'   MATCH', W],
+      ['MD5      stream = '+H16()+'   MATCH', W],
+      ['SHA1     stream = '+H20()+'   MATCH', W],
+      ['SHA256   stream = '+H32()+'   MATCH', W],
+      ['HMAC-SHA1 key='+H16()+' mac='+H20()+'   VALID', W],
+      ['Block cipher MAC verification passed.', W],
+      ['', W],
+      ['--- PHASE 9: DECOMPRESSION ---', W],
+      ['inflateInit2(windowBits=15)  OK', W],
+      ['inflate() pass 1: avail_in=2143872  avail_out=6291456', W],
+      ['  processed: 524288 bytes  out: 1312768 bytes', W],
+      ['inflate() pass 2: avail_in=1619584  avail_out=4978688', W],
+      ['  processed: 524288 bytes  out: 1310720 bytes', W],
+      ['inflate() pass 3: avail_in=1095296  avail_out=3667968', W],
+      ['  processed: 524288 bytes  out: 1312768 bytes', W],
+      ['inflate() pass 4: avail_in=571008   avail_out=2355200', W],
+      ['  processed: 524288 bytes  out: 1310720 bytes', W],
+      ['inflate() pass 5: avail_in=46720    avail_out=1044480', W],
+      ['  processed: 46720 bytes   out: 1109504 bytes', W],
+      ['Z_STREAM_END  total_in=2143872  total_out=6356480  ratio=66.28%', W],
+      ['inflateEnd()  OK', W],
+      ['', W],
+      ['--- PHASE 10: DECRYPTION (AES-128-CBC) ---', W],
+      ['EVP_DecryptInit_ex(AES-128-CBC)  OK', W],
+      ['  Key: '+H16(), W],
+      ['  IV:  '+H16(), W],
+    ];
+
+    // Gerar os 48 blocos de decrypt
+    for (let i = 1; i <= 48; i++) {
+      seq.push(['EVP_DecryptUpdate() block '+i+'/48  in=131072  out=131072', W]);
+    }
+
+    seq.push(
+      ['EVP_DecryptFinal_ex() padding=PKCS7  pad_bytes=16  OK', W],
+      ['Decryption complete. PlainText size: 6291456 bytes.', W],
+      ['', W],
+      ['--- PHASE 11: FILE EXTRACTION ---', W],
+      ['CreateDirectory("C:\\TEMP\\AURORA_PKG")  OK', W],
+      ['SetFileAttributes(HIDDEN | SYSTEM | NOT_CONTENT_INDEXED)  OK', W],
+      ['', W],
+      ['WriteFile  laudos_brutos_01.dat  offset=0x00000000  size=108420  OK', W],
+      ['  CRC32='+H8()+'  SHA1='+H20()+'  MATCH', W],
+      ['WriteFile  laudos_brutos_02.dat  offset=0x0001A7C4  size=109834  OK', W],
+      ['  CRC32='+H8()+'  SHA1='+H20()+'  MATCH', W],
+      ['WriteFile  laudos_brutos_03.dat  offset=0x00035BEE  size=97210   OK', W],
+      ['  CRC32='+H8()+'  SHA1='+H20()+'  MATCH', W],
+      ['WriteFile  laudos_brutos_04.dat  offset=0x0004D368  size=114320  OK', W],
+      ['  CRC32='+H8()+'  SHA1='+H20()+'  MATCH', W],
+      ['WriteFile  laudos_brutos_05.dat  offset=0x00069F58  size=101780  OK', W],
+      ['  CRC32='+H8()+'  SHA1='+H20()+'  MATCH', W],
+      ['WriteFile  laudos_brutos_06.dat  offset=0x000831EC  size=112004  OK', W],
+      ['  CRC32='+H8()+'  SHA1='+H20()+'  MATCH', W],
+      ['WriteFile  laudos_brutos_07.dat  offset=0x0009F390  size=99540   OK', W],
+      ['  CRC32='+H8()+'  SHA1='+H20()+'  MATCH', W],
+      ['WriteFile  laudos_brutos_08.dat  offset=0x000B8104  size=118090  OK', W],
+      ['  CRC32='+H8()+'  SHA1='+H20()+'  MATCH', W],
+      ['WriteFile  laudos_brutos_09.dat  offset=0x000D636A  size=103450  OK', W],
+      ['  CRC32='+H8()+'  SHA1='+H20()+'  MATCH', W],
+      ['WriteFile  laudos_brutos_10.dat  offset=0x000EFD44  size=97800   OK', W],
+      ['  CRC32='+H8()+'  SHA1='+H20()+'  MATCH', W],
+      ['WriteFile  laudos_brutos_11.dat  offset=0x001073EC  size=115340  OK', W],
+      ['  CRC32='+H8()+'  SHA1='+H20()+'  MATCH', W],
+      ['WriteFile  laudos_brutos_12.dat  offset=0x001253B0  size=108990  OK', W],
+      ['  CRC32='+H8()+'  SHA1='+H20()+'  MATCH', W],
+      ['WriteFile  laudos_brutos_13.dat  offset=0x0013E53E  size=121200  OK', W],
+      ['  CRC32='+H8()+'  SHA1='+H20()+'  MATCH', W],
+      ['WriteFile  laudos_brutos_14.dat  offset=0x0015D06E  size=106760  OK', W],
+      ['  CRC32='+H8()+'  SHA1='+H20()+'  MATCH', W],
+      ['WriteFile  correspondencia_pharmax.zip  offset=0x00175F56  size=204800  OK', W],
+      ['  CRC32='+H8()+'  SHA1='+H20()+'  MATCH', W],
+      ['WriteFile  contrato_nda_assinado.pdf    offset=0x001A6F56  size=87040   OK', W],
+      ['  CRC32='+H8()+'  SHA1='+H20()+'  MATCH', W],
+      ['WriteFile  relatorio_toxicidade.pdf     offset=0x001BBCD6  size=310240  OK', W],
+      ['  CRC32='+H8()+'  SHA1='+H20()+'  MATCH', W],
+      ['WriteFile  emails_velasquez_pharmax.eml offset=0x002098D6  size=42800   OK', W],
+      ['  CRC32='+H8()+'  SHA1='+H20()+'  MATCH', W],
+      ['WriteFile  PROVA_COMPLETA.txt           offset=0x002137A6  size=18340   OK', W],
+      ['  CRC32='+H8()+'  SHA1='+H20()+'  MATCH', W],
+      ['', W],
+      ['19 files written. Total bytes: 2078958. 0 errors.', W],
+      ['', W],
+      ['--- PHASE 12: POST-WRITE VERIFICATION ---', W],
+      ['ReadFile  laudos_brutos_01.dat  verify SHA1='+H20()+'  PASS', W],
+      ['ReadFile  laudos_brutos_02.dat  verify SHA1='+H20()+'  PASS', W],
+      ['ReadFile  laudos_brutos_03.dat  verify SHA1='+H20()+'  PASS', W],
+      ['ReadFile  laudos_brutos_04.dat  verify SHA1='+H20()+'  PASS', W],
+      ['ReadFile  laudos_brutos_05.dat  verify SHA1='+H20()+'  PASS', W],
+      ['ReadFile  laudos_brutos_06.dat  verify SHA1='+H20()+'  PASS', W],
+      ['ReadFile  laudos_brutos_07.dat  verify SHA1='+H20()+'  PASS', W],
+      ['ReadFile  laudos_brutos_08.dat  verify SHA1='+H20()+'  PASS', W],
+      ['ReadFile  laudos_brutos_09.dat  verify SHA1='+H20()+'  PASS', W],
+      ['ReadFile  laudos_brutos_10.dat  verify SHA1='+H20()+'  PASS', W],
+      ['ReadFile  laudos_brutos_11.dat  verify SHA1='+H20()+'  PASS', W],
+      ['ReadFile  laudos_brutos_12.dat  verify SHA1='+H20()+'  PASS', W],
+      ['ReadFile  laudos_brutos_13.dat  verify SHA1='+H20()+'  PASS', W],
+      ['ReadFile  laudos_brutos_14.dat  verify SHA1='+H20()+'  PASS', W],
+      ['ReadFile  correspondencia_pharmax.zip  verify SHA1='+H20()+'  PASS', W],
+      ['ReadFile  contrato_nda_assinado.pdf    verify SHA1='+H20()+'  PASS', W],
+      ['ReadFile  relatorio_toxicidade.pdf     verify SHA1='+H20()+'  PASS', W],
+      ['ReadFile  emails_velasquez_pharmax.eml verify SHA1='+H20()+'  PASS', W],
+      ['ReadFile  PROVA_COMPLETA.txt           verify SHA1='+H20()+'  PASS', W],
+      ['19/19 files verified. Integrity confirmed.', W],
+      ['', W],
+      ['--- PHASE 13: REGISTRY ---', W],
+      ['RegOpenKeyEx(HKLM\\SOFTWARE\\weekd, KEY_ALL_ACCESS) -> 0x'+H4(), W],
+      ['RegSetValueEx(LastRun,     "13/03/1997 22:07:'+ri(10,59)+'")  OK', W],
+      ['RegSetValueEx(Status,      "TRANSFER_OK")  OK', W],
+      ['RegSetValueEx(PkgHash,     "'+H32()+'")  OK', W],
+      ['RegSetValueEx(PkgVersion,  "4.2.0")  OK', W],
+      ['RegSetValueEx(FilesCount,  "19")  OK', W],
+      ['RegSetValueEx(BytesTotal,  "2143872")  OK', W],
+      ['RegSetValueEx(OutputPath,  "C:\\TEMP\\AURORA_PKG\\")  OK', W],
+      ['RegSetValueEx(SessionKey,  "'+H32()+'")  OK', W],
+      ['RegCloseKey()  OK', W],
+      ['', W],
+      ['--- PHASE 14: MEMORY CLEANUP ---', W],
+      ['VirtualFree(0x'+H8()+', 524288,  MEM_RELEASE)  OK', W],
+      ['VirtualFree(0x'+H8()+', 1048576, MEM_RELEASE)  OK', W],
+      ['VirtualFree(0x'+H8()+', 262144,  MEM_RELEASE)  OK', W],
+      ['VirtualFree(0x'+H8()+', 131072,  MEM_RELEASE)  OK', W],
+      ['VirtualFree(0x'+H8()+', 65536,   MEM_RELEASE)  OK', W],
+      ['HeapFree(hHeap, 0x'+H8()+')  OK', W],
+      ['HeapFree(hHeap, 0x'+H8()+')  OK', W],
+      ['HeapDestroy(0x'+H8()+')  OK', W],
+      ['CloseHandle(0x'+H4()+')  OK', W],
+      ['CloseHandle(0x'+H4()+')  OK', W],
+      ['WSACleanup()  OK', W],
+      ['FreeLibrary(wsock32.dll)  OK', W],
+      ['FreeLibrary(crypt32.dll)  OK', W],
+      ['FreeLibrary(secur32.dll)  OK', W],
+      ['All handles closed. No leaks detected.', W],
+      ['', W],
+      ['--- TRANSFER SUMMARY ---', W],
+      ['  Package     : AURORA_EVIDENCE_PKG v4.2.0', W],
+      ['  Origin      : INST_VELASQUEZ/LAB3/ANA_CARVALHO', W],
+      ['  Files       : 19', W],
+      ['  Bytes in    : 2143872', W],
+      ['  Bytes out   : 2078958', W],
+      ['  Compression : 66.28%', W],
+      ['  Integrity   : VERIFIED (SHA256)', W],
+      ['  Output      : C:\\TEMP\\AURORA_PKG\\', W],
+      ['  Duration    : '+ri(12,18)+'.'+ri(100,999)+'s', W],
+      ['  Throughput  : '+ri(110,180)+' KB/s', W],
+      ['', W],
+      ['weekd.exe exited with code 0x00000000 (STATUS_SUCCESS)', W],
+      ['', W],
+    );
+
+    for (const [text, color] of seq) {
+      addLine(text, color);
+      wc.scrollTop = wc.scrollHeight;
+      await wait(28);
+    }
+
+    await wait(500);
+    glitchScreen();
+    playGlitch();
+    await wait(1400);
+    glitchScreen();
+  }
+
+  // Boot inicial do CMD
+  (async () => {
+    await wait(100);
+    addLine('Microsoft(R) Windows 95', '#ffffff');
+    await wait(80);
+    addLine('(C)Copyright Microsoft Corp 1981-1995.', '#c0c0c0');
+    await wait(80);
+    addLine('', null);
+    await wait(100);
+    mountInput();
+  })();
+}
+
+// ===================== YOUTUBE =====================
+function openYouTube() {
+  if (windows['youtube']) { focusWindow('youtube'); return; }
+
+  const YT_LOGO = `<svg width="90" height="20" viewBox="0 0 90 20" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="28" height="20" rx="4" fill="#FF0000"/>
+    <polygon points="11,5 11,15 20,10" fill="#FFFFFF"/>
+    <text x="32" y="15" font-family="Arial,sans-serif" font-weight="bold" font-size="14" fill="#000000">YouTub</text>
+  </svg>`;
+
+  const VIDEOS = [
+    {
+      id:'v1',
+      thumb:'lab',
+      title:'Coletiva de imprensa — Instituto Velasquez anuncia "grande descoberta"',
+      channel:'Jornal do Brasil Online',
+      views:'12.483',
+      date:'28/02/1997',
+      duration:'4:32',
+      desc:'O Dr. Helcio Velasquez apresentou os resultados do Projeto AURORA em coletiva nesta sexta-feira. O produto será lançado em abril.',
+      comments:[
+        {user:'internauta_sp', txt:'Esse Velasquez sempre aparece sorrindo demais. Estranho.'},
+        {user:'ciencia_hoje',  txt:'O relatório completo foi publicado? Não encontro em lugar nenhum.'},
+        {user:'anonimo_rj',    txt:'Meu primo trabalha lá. Disse que não é bem assim que aconteceu...'},
+      ]
+    },
+    {
+      id:'v2',
+      thumb:'doc',
+      title:'PHARMAX Internacional — Novo medicamento aprovado para distribuição nacional',
+      channel:'PHARMAX Corp',
+      views:'3.201',
+      date:'02/03/1997',
+      duration:'2:11',
+      desc:'Vídeo institucional da PHARMAX Internacional apresentando o produto desenvolvido em parceria com o Instituto Velasquez.',
+      comments:[
+        {user:'medico_rs',     txt:'Que produto é esse exatamente? O nome técnico não aparece em nenhum momento.'},
+        {user:'farmaceutica21',txt:'Os dados clínicos publicados são de fase 2. Cadê a fase 3?'},
+        {user:'v_anon',        txt:'Deletem esse comentário mas: os laudos originais não batem com o relatório final.'},
+      ]
+    },
+    {
+      id:'v3',
+      thumb:'building',
+      title:'Pesquisadora desaparece após denúncia anônima — Polícia investiga',
+      channel:'Repórter Agora',
+      views:'48.920',
+      date:'14/03/1997',
+      duration:'7:05',
+      desc:'Ana Carvalho, pesquisadora sênior do Instituto Velasquez, está desaparecida desde a última semana. Colegas afirmam que ela teria levantado questionamentos internos antes do sumiço.',
+      comments:[
+        {user:'preocupada_msp', txt:'Eu conheço a Ana. Ela não iria embora de férias sem avisar ninguém.'},
+        {user:'jornalismo_real', txt:'Alguém tem o contato do colega dela? Precisamos investigar mais.'},
+        {user:'anonimo332',     txt:'Procurem por AURORA_EVIDENCE. Não vou dizer mais nada.'},
+      ]
+    },
+    {
+      id:'v4',
+      thumb:'lab',
+      title:'"Não assine nada" — Ex-funcionário do Instituto fala sobre pressão interna',
+      channel:'Canal Verdade BR',
+      views:'89.441',
+      date:'15/03/1997',
+      duration:'11:48',
+      desc:'Um ex-funcionário do Instituto Velasquez, em anonimato, relata pressões para alterar resultados de pesquisa antes da publicação oficial.',
+      comments:[
+        {user:'dr_pimentel',   txt:'Isso é gravíssimo se for verdade. Onde está a ANVISA nisso?'},
+        {user:'farmawatcher',  txt:'O contrato com a PHARMAX foi assinado ANTES dos testes. Isso é conflito de interesse.'},
+        {user:'marco_a_1997',  txt:'Alguém precisa levar esses arquivos à imprensa. Temos provas.'},
+      ]
+    },
+    {
+      id:'v5',
+      thumb:'doc',
+      title:'PHARMAX responde às acusações: "Todos os protocolos foram seguidos"',
+      channel:'PHARMAX Corp',
+      views:'1.832',
+      date:'15/03/1997',
+      duration:'1:44',
+      desc:'Nota oficial da PHARMAX Internacional negando irregularidades no desenvolvimento do produto em parceria com o Instituto Velasquez.',
+      comments:[
+        {user:'cetico_total',  txt:'Claro que eles vão negar. Cadê os laudos originais?'},
+        {user:'anonimo_444',   txt:'AURORA_BACKUP. C:\\TEMP. Procurem.'},
+        {user:'jur_empresarial',txt:'Se os dados foram mesmo adulterados, isso é crime federal.'},
+      ]
+    },
+  ];
+
+  let currentVideo = null;
+
+  const win = document.createElement('div');
+  win.id = 'win-youtube';
+  win.className = 'win';
+  win.style.cssText = 'width:680px;height:520px;left:60px;top:40px;z-index:200;display:flex;flex-direction:column;';
+
+  win.innerHTML = `
+    <div class="win-titlebar" id="tb-youtube" style="background:linear-gradient(90deg,#CC0000,#FF0000);">
+      <span style="font-size:11px;">
+        <svg width="70" height="14" viewBox="0 0 90 20" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;">
+          <rect x="0" y="1" width="26" height="18" rx="3" fill="#FFFFFF"/>
+          <polygon points="9,5 9,15 19,10" fill="#FF0000"/>
+          <text x="30" y="15" font-family="Arial,sans-serif" font-weight="bold" font-size="14" fill="#FFFFFF">YouTub</text>
+        </svg>
+      </span>
+      <span class="win-title" style="margin-left:4px;font-size:11px;">YouTub — 1997 Beta</span>
+      <div class="win-controls">
+        <div class="win-btn" onclick="minimizeWindow('youtube')">_</div>
+        <div class="win-btn" onclick="maximizeWindow('youtube')">□</div>
+        <div class="win-btn" style="font-weight:bold;" onclick="closeWindow('youtube')">✕</div>
+      </div>
+    </div>
+    <div style="background:#f0f0f0;border-bottom:1px solid #aaa;padding:3px 6px;display:flex;align-items:center;gap:6px;flex-shrink:0;">
+      <svg width="60" height="16" viewBox="0 0 90 20" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0" y="1" width="26" height="18" rx="3" fill="#FF0000"/>
+        <polygon points="9,5 9,15 19,10" fill="#FFFFFF"/>
+        <text x="30" y="15" font-family="Arial,sans-serif" font-weight="bold" font-size="14" fill="#CC0000">YouTub</text>
+      </svg>
+      <input id="yt-search" type="text" placeholder="Pesquisar vídeos..." style="flex:1;font-family:'Share Tech Mono',monospace;font-size:11px;border:2px inset #808080;padding:2px 4px;background:white;">
+      <button onclick="ytSearch()" style="font-family:'Share Tech Mono',monospace;font-size:11px;background:#c0c0c0;border:2px solid;border-color:#fff #808080 #808080 #fff;padding:2px 8px;cursor:pointer;">Buscar</button>
+    </div>
+    <div id="yt-body" style="flex:1;overflow:hidden;display:flex;background:white;"></div>
+  `;
+
+  document.getElementById('desktop').appendChild(win);
+  windows['youtube'] = { minimized:false, title:'YouTub', icon:'▶' };
+
+  const tb = document.getElementById('tb-youtube');
+  function startDrag(e) {
+    const pos = getEventPos(e);
+    dragState = { id:'youtube', startX: pos.x - win.offsetLeft, startY: pos.y - win.offsetTop };
+    focusWindow('youtube');
+  }
+  tb.addEventListener('mousedown', startDrag);
+  tb.addEventListener('touchstart', startDrag, {passive:true});
+  win.addEventListener('mousedown', () => focusWindow('youtube'));
+  win.addEventListener('touchstart', () => focusWindow('youtube'), {passive:true});
+
+  focusWindow('youtube');
+  updateTaskbar();
+  playOpen();
+
+  // Renderiza thumbnail no canvas
+  function renderThumb(canvas, type) {
+    if (!canvas) return;
+    drawPixelArt(canvas, type);
+  }
+
+  // Tela principal — lista de vídeos
+  function showHome() {
+    currentVideo = null;
+    const body = document.getElementById('yt-body');
+    body.style.flexDirection = 'column';
+    body.style.overflowY = 'auto';
+    body.innerHTML = `
+      <div style="padding:6px 10px;background:#cc0000;color:white;font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:bold;flex-shrink:0;">
+        📺 Vídeos em destaque — Março 1997
+      </div>
+      <div id="yt-list" style="padding:8px;display:flex;flex-direction:column;gap:8px;"></div>
+    `;
+    const list = document.getElementById('yt-list');
+    VIDEOS.forEach(v => {
+      const card = document.createElement('div');
+      card.style.cssText = 'display:flex;gap:8px;cursor:pointer;padding:6px;border:1px solid #ddd;background:#fafafa;';
+      card.innerHTML = `
+        <canvas id="ythumb-${v.id}" width="120" height="68" style="flex-shrink:0;border:1px solid #ccc;image-rendering:pixelated;"></canvas>
+        <div style="flex:1;font-family:'Share Tech Mono',monospace;">
+          <div style="font-size:12px;font-weight:bold;color:#000066;line-height:1.3;margin-bottom:3px;">${v.title}</div>
+          <div style="font-size:10px;color:#666;">${v.channel}</div>
+          <div style="font-size:10px;color:#999;margin-top:2px;">${v.views} visualizações · ${v.date} · ${v.duration}</div>
+        </div>
+      `;
+      card.onmouseenter = () => card.style.background = '#eef';
+      card.onmouseleave = () => card.style.background = '#fafafa';
+      card.onclick = () => { playClick(); showVideo(v); };
+      list.appendChild(card);
+      setTimeout(() => renderThumb(document.getElementById('ythumb-'+v.id), v.thumb), 30);
+    });
+  }
+
+  // Tela de vídeo individual
+  function showVideo(v) {
+    currentVideo = v;
+    const body = document.getElementById('yt-body');
+    body.style.flexDirection = 'row';
+    body.style.overflowY = 'hidden';
+    body.innerHTML = `
+      <div style="flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:6px;">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:#0000cc;cursor:pointer;" onclick="ytBack()">← Voltar</div>
+        <canvas id="yt-player" width="400" height="225" style="width:100%;border:2px solid #333;background:#000;image-rendering:pixelated;"></canvas>
+        <div style="font-family:'Share Tech Mono',monospace;">
+          <div style="font-size:13px;font-weight:bold;color:#000;line-height:1.3;">${v.title}</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">${v.channel} · ${v.views} visualizações · ${v.date}</div>
+          <div style="border-top:1px solid #ddd;margin-top:6px;padding-top:6px;font-size:11px;color:#333;line-height:1.5;">${v.desc}</div>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;">
+          <div style="font-size:11px;font-weight:bold;border-bottom:1px solid #ddd;padding-bottom:4px;margin-bottom:6px;">Comentários (${v.comments.length})</div>
+          ${v.comments.map(c=>`
+            <div style="margin-bottom:8px;padding:4px;border:1px solid #eee;background:#fafafa;">
+              <div style="font-size:10px;font-weight:bold;color:#000066;">${c.user}</div>
+              <div style="font-size:11px;color:#333;margin-top:2px;">${c.txt}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div style="width:180px;flex-shrink:0;border-left:1px solid #ddd;overflow-y:auto;padding:6px;background:#f8f8f8;">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;font-weight:bold;color:#cc0000;margin-bottom:6px;">RELACIONADOS</div>
+        <div id="yt-related"></div>
+      </div>
+    `;
+
+    // Desenhar "player" — versão ampliada do thumb + botão play clicável
+    let playerInterval = null;
+    let isPlaying = false;
+    let elapsed = 0;
+
+    // Parseia "4:32" em segundos
+    function parseDur(s) {
+      const [m, sec] = s.split(':').map(Number);
+      return m * 60 + sec;
+    }
+    function fmtTime(s) {
+      return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+    }
+
+    const totalSec = parseDur(v.duration);
+
+    function drawPlayer(playing) {
+      const c = document.getElementById('yt-player');
+      if (!c) return;
+      const ctx = c.getContext('2d');
+      const W = c.width, H = c.height;
+
+      // Fundo — thumbnail do vídeo
+      drawPixelArt(c, v.thumb);
+
+      if (!playing) {
+        // Overlay escuro + botão play
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx.fillRect(0, 0, W, H);
+        // Círculo branco
+        ctx.fillStyle = 'rgba(255,255,255,0.92)';
+        ctx.beginPath();
+        ctx.arc(W/2, H/2, 32, 0, Math.PI*2);
+        ctx.fill();
+        // Triângulo vermelho
+        ctx.fillStyle = '#cc0000';
+        ctx.beginPath();
+        ctx.moveTo(W/2-12, H/2-18);
+        ctx.lineTo(W/2-12, H/2+18);
+        ctx.lineTo(W/2+22, H/2);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        // Overlay leve
+        ctx.fillStyle = 'rgba(0,0,0,0.08)';
+        ctx.fillRect(0, 0, W, H);
+
+        // Barras de áudio animadas (canto superior direito)
+        const bars = 6;
+        const bw = 5, gap = 3;
+        const bx = W - (bars*(bw+gap)) - 8;
+        const by = 10;
+        for (let i = 0; i < bars; i++) {
+          const bh = 6 + Math.random() * 14;
+          ctx.fillStyle = '#FF0000';
+          ctx.fillRect(bx + i*(bw+gap), by + (18 - bh), bw, bh);
+        }
+
+        // Barra de progresso no fundo
+        const prog = elapsed / totalSec;
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(0, H-22, W, 22);
+        // trilha cinza
+        ctx.fillStyle = '#666';
+        ctx.fillRect(8, H-12, W-16, 4);
+        // progresso vermelho
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(8, H-12, (W-16)*prog, 4);
+        // bolinha
+        ctx.fillStyle = '#FF0000';
+        ctx.beginPath();
+        ctx.arc(8 + (W-16)*prog, H-10, 5, 0, Math.PI*2);
+        ctx.fill();
+        // tempo
+        ctx.fillStyle = '#fff';
+        ctx.font = '11px "Share Tech Mono", monospace';
+        ctx.fillText(`${fmtTime(elapsed)} / ${v.duration}`, W-90, H-5);
+
+        // Ícone de pause (dois retângulos)
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.fillRect(10, H-20, 5, 14);
+        ctx.fillRect(18, H-20, 5, 14);
+      }
+    }
+
+    function startPlay() {
+      if (isPlaying) return;
+      isPlaying = true;
+      beep(880, 0.05, 0.15, 'sine');
+      playerInterval = setInterval(() => {
+        elapsed++;
+        if (elapsed >= totalSec) {
+          elapsed = totalSec;
+          stopPlay();
+          return;
+        }
+        drawPlayer(true);
+      }, 1000);
+      drawPlayer(true);
+    }
+
+    function stopPlay() {
+      isPlaying = false;
+      clearInterval(playerInterval);
+      playerInterval = null;
+      drawPlayer(false);
+    }
+
+    setTimeout(() => {
+      const c = document.getElementById('yt-player');
+      if (!c) return;
+      drawPlayer(false);
+      c.style.cursor = 'pointer';
+      c.onclick = () => {
+        playClick();
+        if (isPlaying) stopPlay();
+        else startPlay();
+      };
+      // Limpa ao trocar vídeo
+      c._cleanup = () => { clearInterval(playerInterval); };
+    }, 30);
+
+    // Relacionados
+    const rel = document.getElementById('yt-related');
+    VIDEOS.filter(vv=>vv.id!==v.id).forEach(vv=>{
+      const r = document.createElement('div');
+      r.style.cssText = 'cursor:pointer;margin-bottom:8px;padding:3px;';
+      r.innerHTML = `
+        <canvas id="ytrel-${vv.id}" width="160" height="90" style="width:100%;border:1px solid #ccc;image-rendering:pixelated;display:block;"></canvas>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#000066;margin-top:2px;line-height:1.2;">${vv.title.slice(0,55)}...</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#999;">${vv.views} views</div>
+      `;
+      r.onmouseenter = () => r.style.background='#eef';
+      r.onmouseleave = () => r.style.background='';
+      r.onclick = () => { playClick(); showVideo(vv); };
+      rel.appendChild(r);
+      setTimeout(() => renderThumb(document.getElementById('ytrel-'+vv.id), vv.thumb), 30);
+    });
+  }
+
+  window.ytBack = () => { playClick(); showHome(); };
+  window.ytSearch = () => {
+    playClick();
+    const q = document.getElementById('yt-search')?.value?.toLowerCase() || '';
+    if (!q) { showHome(); return; }
+    const results = VIDEOS.filter(v => v.title.toLowerCase().includes(q) || v.desc.toLowerCase().includes(q));
+    const body = document.getElementById('yt-body');
+    body.style.flexDirection = 'column';
+    body.style.overflowY = 'auto';
+    body.innerHTML = `
+      <div style="padding:6px 10px;background:#cc0000;color:white;font-family:'Share Tech Mono',monospace;font-size:11px;flex-shrink:0;">
+        🔍 Resultados para: "${q}" (${results.length} vídeo${results.length!==1?'s':''})
+        <span style="margin-left:8px;cursor:pointer;text-decoration:underline;" onclick="ytBack()">← Voltar</span>
+      </div>
+      <div id="yt-list" style="padding:8px;display:flex;flex-direction:column;gap:8px;"></div>
+    `;
+    const list = document.getElementById('yt-list');
+    if (results.length === 0) {
+      list.innerHTML = `<div style="font-family:'Share Tech Mono',monospace;font-size:12px;color:#666;padding:12px;">Nenhum vídeo encontrado.</div>`;
+      return;
+    }
+    results.forEach(v => {
+      const card = document.createElement('div');
+      card.style.cssText = 'display:flex;gap:8px;cursor:pointer;padding:6px;border:1px solid #ddd;background:#fafafa;';
+      card.innerHTML = `
+        <canvas id="ythumb2-${v.id}" width="120" height="68" style="flex-shrink:0;border:1px solid #ccc;image-rendering:pixelated;"></canvas>
+        <div style="flex:1;font-family:'Share Tech Mono',monospace;">
+          <div style="font-size:12px;font-weight:bold;color:#000066;">${v.title}</div>
+          <div style="font-size:10px;color:#666;">${v.channel} · ${v.views} views · ${v.date}</div>
+        </div>
+      `;
+      card.onclick = () => { playClick(); showVideo(v); };
+      list.appendChild(card);
+      setTimeout(() => renderThumb(document.getElementById('ythumb2-'+v.id), v.thumb), 30);
+    });
+  };
+
+  showHome();
+}
+
+function openLockedFolder(file) {
+  // Check if already have enough clues
+  const found = CLUES_NEEDED.filter(c => state.cluesFound.has(c)).length;
+  if (found < 3) {
+    playError();
+    showDialog('Pasta Protegida', '🔒',
+      `Esta pasta está protegida por senha.<br><br>Você ainda não tem informações suficientes para adivinhar a senha.<br><br>Continue explorando o computador...`,
+      'OK', null);
+    return;
+  }
+
+  // Show password prompt
+  showPasswordDialog(file);
+}
+
+// ===================== CLUE SYSTEM =====================
+function addClue(clueId) {
+  if (state.cluesFound.has(clueId)) return;
+  state.cluesFound.add(clueId);
+  checkProgress();
+}
+
+function checkProgress() {
+  const found = CLUES_NEEDED.filter(c => state.cluesFound.has(c)).length;
+  if (found === 3 && state.phase === 1) {
+    state.phase = 2;
+    setTimeout(() => {
+      playAlert();
+      glitchScreen();
+      showDialog('⚠ Aviso do Sistema', '⚠️',
+        `Um arquivo foi desbloqueado:<br><br><b>C:\\SISTEMA\\AURORA_BACKUP</b><br><br>Marco deixou uma nota: "A senha é o nome dela seguido do ano que chegou ao instituto."`,
+        'OK', null);
+    }, 800);
+  }
+}
+
+// ===================== PASSWORD DIALOG =====================
+function showPasswordDialog(file) {
+  playAlert();
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:9990;';
+  overlay.id = 'pw-overlay';
+
+  overlay.innerHTML = `
+    <div class="dialog" style="z-index:9995;">
+      <div class="dialog-title">🔒 Pasta Protegida por Senha <span style="cursor:pointer" onclick="closePasswordDialog()">✕</span></div>
+      <div class="dialog-body">
+        <div class="dialog-icon">🔒</div>
+        <div class="dialog-text">
+          Digite a senha para acessar <b>${file.label}</b>:
+          <input type="password" class="pw-input" id="pw-input" placeholder="senha..." onkeydown="if(event.key==='Enter')checkPassword('${file.id}','${file.password}')">
+          <div id="pw-error" style="color:red;font-size:11px;margin-top:4px;"></div>
+        </div>
+      </div>
+      <div class="dialog-btns">
+        <button class="dialog-btn" onclick="checkPassword('${file.id}','${file.password}')">OK</button>
+        <button class="dialog-btn" onclick="closePasswordDialog()">Cancelar</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  setTimeout(() => document.getElementById('pw-input')?.focus(), 50);
+}
+
+function closePasswordDialog() {
+  const o = document.getElementById('pw-overlay');
+  if (o) o.remove();
+}
+
+function checkPassword(fileId, correct) {
+  const input = document.getElementById('pw-input');
+  const val = input ? input.value.trim().toUpperCase() : '';
+  state.passwordAttempts++;
+
+  if (val === correct) {
+    closePasswordDialog();
+    playReveal();
+    glitchScreen();
+    // Open the folder
+    openExplorer('aurora_backup', 'AURORA_BACKUP', '📁');
+    setTimeout(() => {
+      showDialog('Acesso Concedido', '✅',
+        `Bem-vindo à pasta de Ana Carvalho.<br><br>Você encontrou as provas.<br><br>Agora sabe o que fazer com elas.`,
+        'Ver Arquivo', () => {
+          const f = FILES['aurora_backup'][0];
+          if (f) openTextFile(f);
+          setTimeout(() => triggerEnding(), 4000);
+        });
+    }, 600);
+  } else {
+    playError();
+    const err = document.getElementById('pw-error');
+    if (err) err.textContent = `Senha incorreta. (Tentativa ${state.passwordAttempts})`;
+    if (state.passwordAttempts >= 3) {
+      err.textContent += ' — Dica: nome de mulher + ano (4 dígitos)';
+    }
+    input.value = '';
+    input.focus();
+  }
+}
+
+// ===================== DIALOG =====================
+function showDialog(title, icon, message, btnLabel, callback) {
+  const existing = document.getElementById('dialog-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.2);z-index:9980;';
+  overlay.id = 'dialog-overlay';
+
+  overlay.innerHTML = `
+    <div class="dialog">
+      <div class="dialog-title">${title}</div>
+      <div class="dialog-body">
+        <div class="dialog-icon">${icon}</div>
+        <div class="dialog-text">${message}</div>
+      </div>
+      <div class="dialog-btns">
+        <button class="dialog-btn" onclick="closeDialog()" autofocus>${btnLabel}</button>
+        ${callback ? '' : ''}
+      </div>
+    </div>
+  `;
+
+  // If there's a callback for the button
+  if (callback) {
+    overlay.querySelector('.dialog-btn').onclick = () => { closeDialog(); callback(); };
+  } else {
+    overlay.querySelector('.dialog-btn').onclick = closeDialog;
+  }
+
+  document.body.appendChild(overlay);
+}
+
+function closeDialog() {
+  const o = document.getElementById('dialog-overlay');
+  if (o) o.remove();
+}
+
+// ===================== GLITCH =====================
+function glitchScreen() {
+  playGlitch();
+  document.getElementById('desktop').classList.add('glitch');
+  setTimeout(() => document.getElementById('desktop').classList.remove('glitch'), 1000);
+}
+
+// ===================== ENDING =====================
+function triggerEnding() {
+  playGlitch();
+  glitchScreen();
+  setTimeout(() => {
+    const fs = document.getElementById('final-screen');
+    fs.classList.add('show');
+    document.getElementById('final-msg').innerHTML = `
+      <div class="white" style="font-size:28px;margin-bottom:20px;">— FIM —</div>
+      <div class="white" style="margin-bottom:16px;">Você encontrou as provas de Ana Carvalho.</div>
+      <div class="red" style="margin-bottom:16px;">O Instituto Velasquez e a Pharmax Internacional<br>ocultaram dados que colocariam 200.000 pessoas em risco.</div>
+      <div class="white" style="margin-bottom:16px;">Marco Aurélio desapareceu na noite de 13/03/1997.<br>Ana Carvalho desapareceu dias antes.</div>
+      <div class="white" style="margin-bottom:24px;">Nenhum dos dois foi encontrado.</div>
+      <div class="red" style="font-size:24px;">O produto foi lançado em abril de 1997.</div>
+      <div class="white" style="margin-top:24px;font-size:16px;opacity:0.6;">Agora você sabe.<br>Isso muda alguma coisa?</div>
+      <div class="white blink" style="margin-top:32px;font-size:14px;">[ clique para reiniciar ]</div>
+    `;
+    playReveal();
+    fs.onclick = () => location.reload();
+  }, 1500);
+}
+
+// ===================== DESKTOP ICONS =====================
+function buildDesktop() {
+  const positions = [
+    {x:20,y:20},{x:20,y:110},{x:20,y:200},{x:20,y:290},{x:20,y:380},{x:20,y:470}
+  ];
+
+  // SVG logo YouTube para o ícone do desktop
+  const YT_ICON_SVG = `<svg width="38" height="28" viewBox="0 0 38 28" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="38" height="28" rx="6" fill="#FF0000"/>
+    <polygon points="14,7 14,21 27,14" fill="#FFFFFF"/>
+  </svg>`;
+
+  FILES.desktop.forEach((f, i) => {
+    const icon = document.createElement('div');
+    icon.className = 'desktop-icon';
+    icon.style.left = positions[i].x + 'px';
+    icon.style.top  = positions[i].y + 'px';
+
+    const iconContent = f.icon === 'yt'
+      ? `<div class="icon-img" style="font-size:0;line-height:0;">${YT_ICON_SVG}</div>`
+      : `<div class="icon-img">${f.icon}</div>`;
+
+    icon.innerHTML = `${iconContent}<div class="icon-label">${f.label}</div>`;
+    icon.ondblclick = () => openWindow(f.id);
+    let lastTap = 0;
+    icon.addEventListener('touchend', (e) => {
+      const now = Date.now();
+      if (now - lastTap < 350) { e.preventDefault(); openWindow(f.id); }
+      lastTap = now;
+    });
+    icon.onclick = (e) => {
+      document.querySelectorAll('.desktop-icon').forEach(d => d.classList.remove('selected'));
+      icon.classList.add('selected');
+      playClick();
+    };
+    document.getElementById('desktop').appendChild(icon);
+  });
+}
+
+// ===================== CLOCK =====================
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('clock').textContent = `${h}:${m}`;
+}
+
+// ===================== START MENU =====================
+function toggleStart() {
+  playClick();
+  const m = document.getElementById('start-menu');
+  m.style.display = m.style.display === 'none' ? 'block' : 'none';
+}
+function closeStart() {
+  document.getElementById('start-menu').style.display = 'none';
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#start-menu') && !e.target.closest('#start-btn')) closeStart();
+});
+
+// ===================== BOOT SEQUENCE =====================
+function boot() {
+  const lines = document.querySelectorAll('.boot-line');
+  let i = 0;
+  function showNext() {
+    if (i < lines.length) {
+      lines[i].classList.add('show');
+      i++;
+      setTimeout(showNext, i < 5 ? 120 : i < 9 ? 200 : 400);
+    } else {
+      playBoot();
+      setTimeout(() => {
+        const bootEl = document.getElementById('boot');
+        bootEl.style.transition = 'opacity 0.5s';
+        bootEl.style.opacity = '0';
+        setTimeout(() => {
+          bootEl.style.display = 'none';
+          buildDesktop();
+          updateClock();
+          setInterval(updateClock, 10000);
+          setTimeout(showIntroCurtain, 200);
+        }, 500);
+      }, 1200);
+    }
+  }
+  showNext();
+}
+
+// ===================== INTRO CURTAIN + WELCOME =====================
+function showIntroCurtain() {
+  const curtain = document.getElementById('intro-curtain');
+  const top     = document.getElementById('curtain-top');
+  const bottom  = document.getElementById('curtain-bottom');
+
+  curtain.style.display = 'block';
+  top.classList.remove('open');
+  bottom.classList.remove('open');
+
+  setTimeout(() => {
+    top.classList.add('open');
+    bottom.classList.add('open');
+    setTimeout(() => {
+      curtain.classList.add('done');
+      showIntroWindow();
+    }, 2300);
+  }, 600);
+}
+
+function showIntroWindow() {
+  const overlay = document.getElementById('intro-overlay');
+  const textEl  = document.getElementById('intro-text');
+  overlay.style.display = 'flex';
+  playOpen();
+
+  textEl.innerHTML =
+    'Olá.<br><br>' +
+    'Este computador foi encontrado em<br>' +
+    'um escritório abandonado.<br><br>' +
+    'O último acesso registrado foi em<br>' +
+    '13/03/1997 — há quase 30 anos.<br><br>' +
+    'Não sabemos o que aconteceu com<br>' +
+    'seu dono. Explore os arquivos.<br>' +
+    'Talvez você descubra.<br><br>' +
+    '— Departamento de TI';
+}
+
+function startGame() {
+  const overlay = document.getElementById('intro-overlay');
+  overlay.style.display = 'none';
+  playClick();
+  setTimeout(() => {
+    showDialog('⚠ Recuperação de Sessão', '⚠️',
+      `Este computador foi encontrado ligado.<br><br>O proprietário, <b>Marco Aurélio</b>, está desaparecido desde 13/03/1997.<br><br>Explore os arquivos para descobrir o que aconteceu.`,
+      'Entendido', null);
+  }, 300);
+}
+
+// ===================== START =====================
+window.onload = () => setTimeout(boot, 300);
+
+// PWA Service Worker
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    self.addEventListener('install', e => self.skipWaiting());
+    self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => new Response(''))));
+  `;
+  const blob = new Blob([swCode], {type: 'application/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(() => {});
+}
+</script>
+</body>
+</html>
